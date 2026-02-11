@@ -1,0 +1,218 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { eq, sql } from "drizzle-orm";
+
+import { db } from "../../../server/db";
+import { comics, authors, chapters, comicGenres, genres } from "../../../server/db/schema";
+
+import MangaActions from "./MangaActions";
+
+type ParamsLike = { id?: string } | Promise<{ id?: string }>;
+
+export default async function MangaPage({ params }: { params: ParamsLike }) {
+  const p = await Promise.resolve(params as any);
+  const idStr = String(p?.id ?? "").trim();
+  if (!idStr) notFound();
+
+  const comicId = Number(idStr);
+  if (!Number.isFinite(comicId)) notFound();
+
+  const rows = await db
+    .select({
+      id: comics.id,
+      title: comics.title,
+      description: comics.description,
+      rating: comics.rating,
+      releaseYear: comics.releaseYear,
+      status: comics.status,
+      authorName: authors.name,
+      coverUrl: sql<string | null>`
+        (select image_url from covers c
+          where c.comic_id = ${comics.id}
+          order by c.is_main desc, c.id asc
+          limit 1)
+      `,
+    })
+    .from(comics)
+    .innerJoin(authors, eq(comics.authorId, authors.id))
+    .where(eq(comics.id, comicId))
+    .limit(1);
+
+  if (rows.length === 0) notFound();
+  const comic = rows[0];
+
+  const genreRows = await db
+    .select({ name: genres.name })
+    .from(comicGenres)
+    .innerJoin(genres, eq(comicGenres.genreId, genres.id))
+    .where(eq(comicGenres.comicId, comicId));
+
+  const chapterRows = await db
+    .select({ id: chapters.id, title: chapters.title, number: chapters.chapterNumber })
+    .from(chapters)
+    .where(eq(chapters.comicId, comicId))
+    .orderBy(sql`${chapters.chapterNumber} asc`);
+
+  const firstChapter = chapterRows[0] ?? null;
+  const ratingText = typeof comic.rating === "number" && comic.rating > 0 ? comic.rating.toFixed(1) : "—";
+
+  return (
+    <div style={{ padding: 24, maxWidth: 1100, margin: "0 auto" }}>
+      <Link href="/catalog" style={{ textDecoration: "none", opacity: 0.85 }}>
+        ← Назад в каталог
+      </Link>
+
+      <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "260px 1fr", gap: 18 }}>
+        {/* ЛЕВАЯ КОЛОНКА: обложка + кнопка "Читать" */}
+        <div style={{ display: "grid", gap: 10 }}>
+          <div
+            style={{
+              borderRadius: 16,
+              overflow: "hidden",
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.03)",
+              aspectRatio: "3 / 4",
+            }}
+          >
+            {comic.coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={comic.coverUrl}
+                alt={comic.title}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", opacity: 0.7 }}>
+                📘
+              </div>
+            )}
+          </div>
+
+          {firstChapter ? (
+            <Link
+              href={`/comics/${comicId}/chapters/${firstChapter.id}`}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.10)",
+                border: "1px solid rgba(255,255,255,0.16)",
+                textDecoration: "none",
+                color: "inherit",
+                fontWeight: 900,
+                textAlign: "center",
+              }}
+            >
+              Читать
+            </Link>
+          ) : (
+            <button
+              disabled
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.10)",
+                color: "rgba(255,255,255,0.55)",
+                fontWeight: 900,
+                textAlign: "center",
+                cursor: "not-allowed",
+              }}
+            >
+              Читать (нет глав)
+            </button>
+          )}
+        </div>
+
+        {/* ПРАВАЯ КОЛОНКА: инфо */}
+        <div style={{ display: "grid", gap: 10 }}>
+          <h1 style={{ margin: 0 }}>{comic.title}</h1>
+
+          <div style={{ opacity: 0.85 }}>
+            Автор: <b>{comic.authorName}</b>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", opacity: 0.85 }}>
+            <span>
+              Рейтинг: <b>{ratingText}</b>
+            </span>
+            {comic.releaseYear ? (
+              <span>
+                Год: <b>{comic.releaseYear}</b>
+              </span>
+            ) : null}
+            {comic.status ? (
+              <span>
+                Статус: <b>{comic.status}</b>
+              </span>
+            ) : null}
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {genreRows.length ? (
+              genreRows.map((g) => (
+                <span
+                  key={g.name}
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    background: "rgba(255,255,255,0.04)",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    opacity: 0.9,
+                  }}
+                >
+                  {g.name}
+                </span>
+              ))
+            ) : (
+              <span style={{ opacity: 0.7 }}>Жанры не указаны</span>
+            )}
+          </div>
+
+          {/* Кнопки списков */}
+          <div style={{ marginTop: 6 }}>
+            <MangaActions comicId={comicId} />
+          </div>
+
+          <div style={{ marginTop: 6, opacity: 0.9, lineHeight: 1.5 }}>
+            {comic.description ?? "Описание отсутствует."}
+          </div>
+        </div>
+      </div>
+
+      <section style={{ marginTop: 22 }}>
+        <h2 style={{ margin: "0 0 10px 0" }}>Главы</h2>
+
+        {chapterRows.length === 0 ? (
+          <div style={{ opacity: 0.75 }}>Пока нет глав.</div>
+        ) : (
+          <div style={{ display: "grid", gap: 8 }}>
+            {chapterRows.map((ch) => (
+              <Link
+                key={ch.id}
+                href={`/comics/${comicId}/chapters/${ch.id}`}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: "rgba(255,255,255,0.03)",
+                  textDecoration: "none",
+                  color: "inherit",
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span style={{ fontWeight: 800 }}>
+                  Глава {ch.number}
+                  {ch.title ? ` — ${ch.title}` : ""}
+                </span>
+                <span style={{ opacity: 0.7 }}>→</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

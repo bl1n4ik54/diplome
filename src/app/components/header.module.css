@@ -1,0 +1,104 @@
+/* Header styles: аккуратная шапка как в темной теме */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  background: rgba(10, 10, 16, 0.55);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.logo {
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 18px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.link {
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.9;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+}
+
+.link:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.06);
+}
+
+.spacer {
+  width: 10px;
+}
+
+.user {
+  display: grid;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+}
+
+.userName {
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.userEmail {
+  font-size: 11px;
+  opacity: 0.75;
+  line-height: 1.2;
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  color: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: rgba(255,255,255,0.11);
+}
+
+.btnGhost {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: transparent;
+  color: inherit;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.btnGhost:hover {
+  background: rgba(255,255,255,0.06);
+}

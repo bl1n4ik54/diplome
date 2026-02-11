@@ -1,0 +1,1 @@
+ALTER TABLE "comics" ADD COLUMN "cover_url" text;
