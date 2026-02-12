@@ -1,0 +1,125 @@
+.readerWrap { max-width: 1100px; margin: 0 auto; padding: 18px 14px 28px; }
+
+.readerTop { display: grid; gap: 10px; margin-bottom: 14px; }
+.readerBack { text-decoration: none; color: inherit; opacity: .85; }
+.readerBack:hover { opacity: 1; }
+
+.readerMeta { display: grid; gap: 4px; }
+.readerTitle { font-size: 20px; font-weight: 950; letter-spacing: -0.2px; }
+.readerSub { opacity: .75; font-size: 13px; }
+
+.readerChNav { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.readerBody { display: grid; gap: 12px; }
+.readerControls { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.readerControls.bottom { justify-content: center; }
+
+.readerBtn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.readerBtn:hover { background: rgba(255,255,255,0.09); }
+.readerBtn:disabled, .readerBtn.disabled { opacity: .55; cursor: not-allowed; }
+
+.readerImageBox {
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+}
+
+.readerImg {
+  width: 100%;
+  height: auto;
+  max-width: 980px;
+  border-radius: 12px;
+  display: block;
+}
+
+.readerEmpty {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.04);
+  opacity: 0.9;
+}
+
+/* ====== Counter dropdown (Popover) ====== */
+.readerPickerWrap { position: relative; }
+
+.readerCounterBtn {
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: inherit;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.readerCounterBtn:hover { background: rgba(255,255,255,0.09); }
+
+/* ✅ popover — цвет как на картинке (#0A0A0F) */
+.readerPicker {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(100% + 10px);
+  width: min(360px, 86vw);
+  z-index: 50;
+
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 16px;
+
+  background: #0A0A0F;
+  color: rgba(255,255,255,0.95);
+
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  box-shadow: 0 12px 46px rgba(0,0,0,0.75);
+}
+
+.readerPickerSelect {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: #0A0A0F;
+  color: rgba(255,255,255,0.95);
+  font-weight: 800;
+  outline: none;
+}
+
+.readerPickerSelect option {
+  background: #0A0A0F;
+  color: rgba(255,255,255,0.95);
+}
+
+.readerPickerClose {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: #0A0A0F;
+  color: rgba(255,255,255,0.95);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.readerPickerClose:hover {
+  background: rgba(255,255,255,0.08);
+}

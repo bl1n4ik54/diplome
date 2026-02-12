@@ -11,6 +11,9 @@ export default async function Header() {
   const email = session?.user?.email ?? null;
   const name = session?.user?.name ?? null;
 
+  // ✅ роль (должна приходить из next-auth callbacks)
+  const role = session?.user?.role ?? "user";
+
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
@@ -25,6 +28,13 @@ export default async function Header() {
           <Link href="/catalog" className={styles.link}>
             Каталог
           </Link>
+
+          {/* ✅ Админка видна только админам */}
+          {email && role === "admin" && (
+            <Link href="/admin" className={styles.link}>
+              Админ-панель
+            </Link>
+          )}
 
           <div className={styles.spacer} />
 

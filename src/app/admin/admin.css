@@ -1,0 +1,261 @@
+/* admin.css */
+
+/* Небольшая система переменных, чтобы всё выглядело единообразно */
+:root {
+  --admin-border: rgba(255, 255, 255, 0.14);
+  --admin-border-soft: rgba(255, 255, 255, 0.10);
+  --admin-bg: rgba(255, 255, 255, 0.04);
+  --admin-bg-2: rgba(255, 255, 255, 0.06);
+  --admin-bg-3: rgba(255, 255, 255, 0.085);
+  --admin-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --admin-muted: rgba(255, 255, 255, 0.72);
+  --admin-muted-2: rgba(255, 255, 255, 0.55);
+}
+
+.admin-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 28px);
+}
+
+/* Верхняя панель */
+.admin-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--admin-border-soft);
+
+  /* Если хочешь “прибитую” шапку админки — раскомментируй: */
+  /* position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.35); */
+}
+
+.admin-nav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Ссылки в навигации */
+.admin-link {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  text-decoration: none;
+  color: inherit;
+  background: var(--admin-bg-2);
+  font-weight: 800;
+  line-height: 1;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+}
+
+.admin-link:hover {
+  background: var(--admin-bg-3);
+  border-color: rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
+
+.admin-link:active {
+  transform: translateY(0);
+  opacity: 0.9;
+}
+
+.admin-link:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.6);
+  outline-offset: 2px;
+}
+
+/* Карточки */
+.admin-card {
+  margin-top: 16px;
+  border: 1px solid var(--admin-border-soft);
+  border-radius: 18px;
+  padding: 18px;
+  background: var(--admin-bg);
+  box-shadow: var(--admin-shadow);
+}
+
+.admin-grid {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+/* KPI */
+.admin-kpi {
+  border: 1px solid var(--admin-border-soft);
+  border-radius: 18px;
+  padding: 16px;
+  background: var(--admin-bg);
+}
+
+.admin-kpi-title {
+  opacity: 0.85;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  color: var(--admin-muted);
+}
+
+.admin-kpi-value {
+  font-size: 28px;
+  font-weight: 950;
+  margin-top: 6px;
+  letter-spacing: -0.3px;
+}
+
+/* Таблица */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--admin-border-soft);
+  background: rgba(255,255,255,0.02);
+}
+
+.table thead th {
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+  background: rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--admin-border-soft);
+  padding: 12px 10px;
+}
+
+.table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: top;
+}
+
+/* зебра + hover по строке */
+.table tbody tr:nth-child(even) td {
+  background: rgba(255,255,255,0.015);
+}
+
+.table tbody tr:hover td {
+  background: rgba(255,255,255,0.05);
+}
+
+/* последний ряд без нижней линии */
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Бейдж */
+.badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 900;
+  font-size: 12px;
+  color: rgba(255,255,255,0.9);
+}
+
+/* Кнопки */
+.btn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg-2);
+  color: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  line-height: 1;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+}
+
+.btn:hover {
+  background: var(--admin-bg-3);
+  border-color: rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+  opacity: 0.92;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Инпуты */
+.input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(0, 0, 0, 0.18);
+  color: inherit;
+  width: min(420px, 100%);
+  transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.input::placeholder {
+  color: rgba(255,255,255,0.45);
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* Ряды/контролы */
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 720px) {
+  .admin-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-nav {
+    width: 100%;
+  }
+
+  /* Таблица станет горизонтально скроллимой */
+  .table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table thead th,
+  .table td {
+    white-space: nowrap;
+  }
+}

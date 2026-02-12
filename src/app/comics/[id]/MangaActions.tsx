@@ -1,6 +1,6 @@
 "use client";
 
-// UI: добавить мангу в списки пользователя (planned/reading/completed/on_hold/dropped)
+
 import { useEffect, useMemo, useState } from "react";
 
 type Status = "reading" | "planned" | "completed" | "on_hold" | "dropped";

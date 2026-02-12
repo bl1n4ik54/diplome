@@ -13,6 +13,7 @@ import {
   userComicLists,
   friendRequests,
   readingProgress,
+  chapterPages,
 } from "./schema";
 
 /**
@@ -86,7 +87,21 @@ export const chapterRelations = relations(chapters, ({ one, many }) => ({
     fields: [chapters.comicId],
     references: [comics.id],
   }),
+
   readingProgress: many(readingProgress),
+
+  // ✅ страницы главы
+  pages: many(chapterPages),
+}));
+
+/**
+ * CHAPTER_PAGES
+ */
+export const chapterPagesRelations = relations(chapterPages, ({ one }) => ({
+  chapter: one(chapters, {
+    fields: [chapterPages.chapterId],
+    references: [chapters.id],
+  }),
 }));
 
 /**

@@ -77,6 +77,24 @@ export const chapters = pgTable("chapters", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// CHAPTER PAGES
+export const chapterPages = pgTable(
+  "chapter_pages",
+  {
+    id: serial("id").primaryKey(),
+    chapterId: integer("chapter_id")
+      .references(() => chapters.id)
+      .notNull(),
+    pageNumber: integer("page_number").notNull(),
+    imageUrl: text("image_url").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => ({
+    uniqChapterPage: uniqueIndex("cp_chapter_page_unique").on(t.chapterId, t.pageNumber),
+  })
+);
+
+
 
 // COVERS
 export const covers = pgTable("covers", {

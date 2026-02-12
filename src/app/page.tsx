@@ -17,6 +17,7 @@ export default async function HomePage() {
     chapterId: number;
     chapterNumber: number;
     page: number | null;
+    totalPages: number; // ✅ всего страниц в главе
   }> = [];
 
   if (email) {
@@ -36,6 +37,12 @@ export default async function HomePage() {
           chapterId: chapters.id,
           chapterNumber: chapters.chapterNumber,
           page: readingProgress.page,
+
+          // ✅ считаем кол-во страниц в главе (chapter_pages)
+          totalPages: sql<number>`
+            (select count(*)::int from chapter_pages cp
+              where cp.chapter_id = ${chapters.id})
+          `,
         })
         .from(readingProgress)
         .innerJoin(comics, eq(readingProgress.comicId, comics.id))
@@ -44,6 +51,12 @@ export default async function HomePage() {
         .orderBy(sql`${readingProgress.updatedAt} desc`)
         .limit(6);
     }
+  }
+
+  function pct(page: number, total: number) {
+    if (!total || total <= 0) return 0;
+    const p = Math.round((page / total) * 100);
+    return Math.max(0, Math.min(100, p));
   }
 
   return (
@@ -73,66 +86,97 @@ export default async function HomePage() {
                 Пока нет прогресса. Открой главу — и я буду показывать кнопку “Продолжить”.
               </div>
             ) : (
-              continueItems.map((it) => (
-                <div
-                  key={`${it.comicId}-${it.chapterId}`}
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: 16,
-                    padding: 12,
-                    background: "rgba(255,255,255,0.03)",
-                    display: "grid",
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                    <div
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 14,
-                        overflow: "hidden",
-                        border: "1px solid rgba(255,255,255,0.12)",
-                        display: "grid",
-                        placeItems: "center",
-                        background: "rgba(255,255,255,0.02)",
-                      }}
-                      aria-hidden
-                    >
-                      {it.coverUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={it.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : (
-                        <span>📘</span>
-                      )}
-                    </div>
+              continueItems.map((it) => {
+                const curPage = it.page ?? 1;
+                const total = it.totalPages ?? 0;
+                const progress = pct(curPage, total);
 
-                    <div>
-                      <div style={{ fontWeight: 800 }}>{it.comicTitle}</div>
-                      <div style={{ opacity: 0.75, fontSize: 12 }}>
-                        Глава {it.chapterNumber}
-                        {it.page ? ` • стр. ${it.page}` : ""}
-                      </div>
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/comics/${it.comicId}/chapters/${it.chapterId}${it.page ? `?page=${it.page}` : ""}`}
+                return (
+                  <div
+                    key={`${it.comicId}-${it.chapterId}`}
                     style={{
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      background: "rgba(255,255,255,0.08)",
-                      border: "1px solid rgba(255,255,255,0.14)",
-                      textDecoration: "none",
-                      color: "inherit",
-                      textAlign: "center",
-                      fontWeight: 700,
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      borderRadius: 16,
+                      padding: 12,
+                      background: "rgba(255,255,255,0.03)",
+                      display: "grid",
+                      gap: 10,
                     }}
                   >
-                    Продолжить
-                  </Link>
-                </div>
-              ))
+                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                      <div
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: 14,
+                          overflow: "hidden",
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          display: "grid",
+                          placeItems: "center",
+                          background: "rgba(255,255,255,0.02)",
+                        }}
+                        aria-hidden
+                      >
+                        {it.coverUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={it.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <span>📘</span>
+                        )}
+                      </div>
+
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {it.comicTitle}
+                        </div>
+                        <div style={{ opacity: 0.75, fontSize: 12 }}>
+                          Глава {it.chapterNumber}
+                          {total > 0 ? ` • стр. ${curPage}/${total}` : curPage ? ` • стр. ${curPage}` : ""}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ✅ Полоска прогресса */}
+                    <div
+                      style={{
+                        height: 10,
+                        borderRadius: 999,
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        background: "rgba(255,255,255,0.04)",
+                        overflow: "hidden",
+                      }}
+                      aria-label="Прогресс чтения"
+                      title={total > 0 ? `${progress}%` : "Нет данных о страницах"}
+                    >
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${total > 0 ? progress : 0}%`,
+                          borderRadius: 999,
+                          background: "rgba(255,255,255,0.22)",
+                          transition: "width .2s ease",
+                        }}
+                      />
+                    </div>
+
+                    <Link
+                      href={`/comics/${it.comicId}/chapters/${it.chapterId}?page=${curPage}`}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: 12,
+                        background: "rgba(255,255,255,0.08)",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        textDecoration: "none",
+                        color: "inherit",
+                        textAlign: "center",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Продолжить
+                    </Link>
+                  </div>
+                );
+              })
             )}
           </div>
         </section>

@@ -26,15 +26,18 @@ export default async function CatalogPage({ searchParams }: { searchParams: { q?
       title: comics.title,
       rating: comics.rating,
       coverUrl: sql<string | null>`
-        (select image_url from covers c
-          where c.comic_id = ${comics.id}
-          order by c.is_main desc, c.id asc
-          limit 1)
+        coalesce(
+          (select image_url from covers c
+            where c.comic_id = ${comics.id}
+            order by c.is_main desc, c.id asc
+            limit 1),
+          ${comics.coverUrl}
+        )
       `,
     })
     .from(comics)
     .where(q ? ilike(comics.title, `%${q}%`) : sql`true`)
-    .orderBy(sql`${comics.id} desc`)
+    .orderBy(sql`${comics.createdAt} desc`)
     .limit(60);
 
   return (

@@ -1,5 +1,10 @@
 import UserPageClient from "./user-page-client";
 
-export default async function UserPage({ params }: { params: { id: string } }) {
-  return <UserPageClient userId={params.id} />;
+export default async function UserPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params; // ✅ важно
+  return <UserPageClient userId={id} />;
 }

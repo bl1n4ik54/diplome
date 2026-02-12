@@ -1,38 +1,46 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../server/db";
-import { users, friendRequests, userComicLists, comics, covers } from "../../../../server/db/schema";
-import { and, eq, or, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
+import { and, eq } from "drizzle-orm";
+
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { db } from "../../../../server/db";
+import { users, friendRequests, userComicLists, comics } from "../../../../server/db/schema";
 
-type Status = "reading" | "planned" | "completed" | "on_hold" | "dropped";
-const ALLOWED: Status[] = ["reading", "planned", "completed", "on_hold", "dropped"];
-
+// helper: id текущего пользователя или null
 async function getMeId() {
   const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
+  const email = session?.user?.email ?? null;
   if (!email) return null;
+
   const me = await db.query.users.findFirst({ where: eq(users.email, email) });
   return me?.id ?? null;
 }
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const targetId = Number(params.id);
-  if (!Number.isFinite(targetId)) return NextResponse.json({ error: "Bad id" }, { status: 400 });
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params; // ✅ FIX
+  const targetId = Number(id);
 
-  const meId = await getMeId(); // может быть null (гость)
+  if (!Number.isFinite(targetId)) {
+    return NextResponse.json({ error: "Bad id" }, { status: 400 });
+  }
 
   const target = await db.query.users.findFirst({
     where: eq(users.id, targetId),
-    columns: { id: true, username: true, email: true },
   });
 
-  if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
+  if (!target) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
 
-  // Статус дружбы (если не гость и не сам себе)
+  const meId = await getMeId(); // null если гость
+
+  // --- определяем дружбу
   let friendship:
-    | { state: "self" }
     | { state: "guest" }
+    | { state: "self" }
     | { state: "none" }
     | { state: "friends"; otherUserId: number }
     | { state: "incoming"; requestId: number }
@@ -43,64 +51,63 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   } else if (meId === targetId) {
     friendship = { state: "self" };
   } else {
-    const fr = await db.query.friendRequests.findFirst({
-      where: or(
-        and(eq(friendRequests.fromUserId, meId), eq(friendRequests.toUserId, targetId)),
-        and(eq(friendRequests.fromUserId, targetId), eq(friendRequests.toUserId, meId))
+    // ищем заявку в любую сторону
+    const reqRow = await db.query.friendRequests.findFirst({
+      where: and(
+        eq(friendRequests.fromUserId, meId),
+        eq(friendRequests.toUserId, targetId)
       ),
     });
 
-    if (!fr) friendship = { state: "none" };
-    else if (fr.status === "accepted") friendship = { state: "friends", otherUserId: targetId };
-    else if (fr.status === "pending" && fr.toUserId === meId) friendship = { state: "incoming", requestId: fr.id };
-    else if (fr.status === "pending" && fr.fromUserId === meId) friendship = { state: "outgoing", requestId: fr.id };
-    else friendship = { state: "none" };
-  }
-
-  // ПРАВИЛА ПРИВАТНОСТИ:
-  // - гость: списки скрыты
-  // - не друг: списки скрыты
-  // - друзья или self: списки видны
-const canViewLists =
-  friendship.state === "self" ||
-  friendship.state === "friends" ||
-  friendship.state === "none"; // авторизованный, но не друг
-
-
-  if (!canViewLists) {
-    return NextResponse.json({
-      user: { id: target.id, username: target.username }, // можно не отдавать email
-      friendship,
-      lists: null,
+    const reqBack = await db.query.friendRequests.findFirst({
+      where: and(
+        eq(friendRequests.fromUserId, targetId),
+        eq(friendRequests.toUserId, meId)
+      ),
     });
+
+    const accepted =
+      (reqRow && reqRow.status === "accepted") || (reqBack && reqBack.status === "accepted");
+
+    if (accepted) {
+      friendship = { state: "friends", otherUserId: targetId };
+    } else if (reqBack && reqBack.status === "pending") {
+      friendship = { state: "incoming", requestId: reqBack.id };
+    } else if (reqRow && reqRow.status === "pending") {
+      friendship = { state: "outgoing", requestId: reqRow.id };
+    } else {
+      friendship = { state: "none" };
+    }
   }
 
-  const lists = await db
-    .select({
-      id: userComicLists.id,
-      status: userComicLists.status,
-      progress: userComicLists.progress,
-      updatedAt: userComicLists.updatedAt,
-      comicId: comics.id,
-      title: comics.title,
-      coverUrl: sql<string | null>`
-        (select image_url from covers c
-          where c.comic_id = ${comics.id}
-          order by c.is_main desc, c.id asc
-          limit 1)
-      `,
-    })
-    .from(userComicLists)
-    .innerJoin(comics, eq(userComicLists.comicId, comics.id))
-    .where(and(eq(userComicLists.userId, targetId)))
-    .orderBy(sql`${userComicLists.updatedAt} desc`);
+  // --- списки доступны только друзьям или самому себе
+  const canSeeLists = friendship.state === "friends" || friendship.state === "self";
+  let lists: any[] | null = null;
 
-  // фильтр на случай мусорного status
-  const safeLists = lists.filter((x) => ALLOWED.includes(x.status as Status));
+  if (canSeeLists) {
+    const rows = await db
+      .select({
+        id: userComicLists.id,
+        status: userComicLists.status,
+        progress: userComicLists.progress,
+        comicId: userComicLists.comicId,
+        title: comics.title,
+        coverUrl: comics.coverUrl,
+      })
+      .from(userComicLists)
+      .innerJoin(comics, eq(userComicLists.comicId, comics.id))
+      .where(eq(userComicLists.userId, targetId));
+
+    lists = rows;
+  }
 
   return NextResponse.json({
-    user: { id: target.id, username: target.username, email: target.email },
+    user: {
+      id: target.id,
+      username: target.username ?? "Пользователь",
+      email: target.email ?? undefined,
+    },
     friendship,
-    lists: safeLists,
+    lists, // null если нет доступа
   });
 }

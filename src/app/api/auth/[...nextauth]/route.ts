@@ -9,17 +9,16 @@ import { users } from "../../../../server/db/schema";
 import { eq } from "drizzle-orm";
 
 export const authOptions: NextAuthOptions = {
-  session: {
-    strategy: "jwt",
+  session: { strategy: "jwt" },
+
+  // ✅ под твою структуру страниц (/login, /register, /auth/error)
+  pages: {
+    signIn: "/login",
+    newUser: "/register",
+    error: "/auth/error",
+    signOut: "/",
   },
 
-  pages: {
-    signIn: "/auth/login",
-    signOut: "/",
-    error: "/auth/error",
-    newUser: "/auth/register" 
-  },
-  
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -33,16 +32,12 @@ export const authOptions: NextAuthOptions = {
         const user = await db.query.users.findFirst({
           where: eq(users.email, credentials.email),
         });
-
         if (!user || !user.passwordHash) return null;
 
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash
-        );
-
+        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
 
+        // ✅ возвращаем минимальный user, остальное доберём в jwt() из БД
         return {
           id: String(user.id),
           email: user.email,
@@ -50,10 +45,12 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
+
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+
     YandexProvider({
       clientId: process.env.YANDEX_CLIENT_ID!,
       clientSecret: process.env.YANDEX_CLIENT_SECRET!,
@@ -64,6 +61,7 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (!user.email) return false;
 
+      // OAuth: если юзера ещё нет — создаём
       if (account?.provider !== "credentials") {
         const existingUser = await db.query.users.findFirst({
           where: eq(users.email, user.email),
@@ -75,24 +73,42 @@ export const authOptions: NextAuthOptions = {
             username: user.name ?? "fox",
             provider: account?.provider || "oauth",
             providerId: account?.providerAccountId,
+            // role по умолчанию в схеме = "user"
           });
         }
       }
       return true;
     },
-    
+
+    // ✅ кладём id/role в JWT (важно для админки)
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
+      const email = (user?.email ?? token.email) as string | undefined;
+      if (!email) return token;
+
+      token.email = email;
+
+      // чтобы не дёргать БД каждый раз
+      if (!token.role || !token.id) {
+        const dbUser = await db.query.users.findFirst({
+          where: eq(users.email, email),
+        });
+
+        if (dbUser) {
+          token.id = String(dbUser.id);
+          token.name = dbUser.username ?? token.name;
+          token.role = dbUser.role;
+        }
       }
+
       return token;
     },
-    
+
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
+        session.user.id = String(token.id ?? "");
+        session.user.email = String(token.email ?? "");
+        session.user.name = (token.name as string) ?? session.user.name;
+        session.user.role = token.role as string | undefined;
       }
       return session;
     },
