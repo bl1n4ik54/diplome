@@ -1,4 +1,3 @@
-// home-client.tsx — полная версия с новым дизайном
 "use client";
 
 import Link from "next/link";
