@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Название - Веб-библиотека манги",
+  title: "MangaWorld - Веб-библиотека манги",
   description: "Умная платформа для коллекционирования и обсуждения манги",
 };
 

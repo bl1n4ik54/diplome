@@ -2,118 +2,162 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import SocialButtons from "../components/SocialButtons";
 
 export default function RegisterForm() {
-  const router = useRouter();
-  const [error, setError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
+    setOk("");
+    setLoading(true);
 
-    const form = e.currentTarget as HTMLFormElement;
-    const username = (form.elements.namedItem("username") as HTMLInputElement).value;
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-    const password = (form.elements.namedItem("password") as HTMLInputElement).value;
-
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Ошибка при создании аккаунта. Попробуйте снова.");
-        setIsLoading(false);
-        return;
-      }
-
-      const result = await signIn("credentials", {
-        email,
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username.trim() || null,
+        email: email.trim(),
         password,
-        redirect: false,
-      });
+      }),
+    });
 
-      if (result?.error) {
-        setError("Ошибка при входе после регистрации");
-        setIsLoading(false);
-        return;
-      }
+    const data = await res.json().catch(() => null);
 
-      router.push("/");
-      router.refresh();
-    } catch (err) {
-      console.error("Ошибка регистрации:", err);
-      setError("Внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
-      setIsLoading(false);
+    if (!res.ok) {
+      setError(data?.error ?? "Ошибка регистрации");
+      setLoading(false);
+      return;
     }
-  };
+
+    setOk("✅ Аккаунт создан. Выполняю вход...");
+    // авто-вход после регистрации
+    await signIn("credentials", {
+      email: email.trim(),
+      password,
+      redirect: true,
+      callbackUrl: "/",
+    });
+
+    setLoading(false);
+  }
 
   return (
-    <>
+    <div style={{ display: "grid", gap: 12 }}>
       {error && (
-        <div>
-          <p>{error}</p>
+        <div
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(239,68,68,0.22)",
+            background: "rgba(239,68,68,0.10)",
+            fontWeight: 800,
+          }}
+        >
+          {error}
         </div>
       )}
-      
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Имя пользователя</label>
-          <input
-            name="username"
-            type="text"
-            placeholder="Введите ваше имя"
-            required
-            minLength={3}
-            maxLength={50}
-          />
-        </div>
 
-        <div>
-          <label>Email</label>
-          <input
-            name="email"
-            type="email"
-            placeholder="your.email@example.com"
-            required
-          />
-        </div>
-
-        <div>
-          <div>
-            <label>Пароль</label>
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "Скрыть" : "Показать"}
-            </button>
-          </div>
-          <input
-            name="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Придумайте надежный пароль"
-            required
-            minLength={6}
-          />
-          <p>Минимум 6 символов</p>
-        </div>
-
-        <button
-          type="submit"
-          disabled={isLoading}
+      {ok && (
+        <div
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(34,197,94,0.22)",
+            background: "rgba(34,197,94,0.10)",
+            fontWeight: 800,
+          }}
         >
-          {isLoading ? "Регистрация..." : "Зарегистрироваться"}
+          {ok}
+        </div>
+      )}
+
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
+        <div>
+          <div style={{ opacity: 0.75, fontSize: 12, fontWeight: 800, marginBottom: 6 }}>Ник (опционально)</div>
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="nickname"
+            placeholder="Например: Egor"
+            style={input}
+            maxLength={15}
+          />
+          <div style={{ opacity: 0.65, fontSize: 12, marginTop: 6 }}>
+            Можно оставить пустым — позже изменишь в профиле.
+          </div>
+        </div>
+
+        <div>
+          <div style={{ opacity: 0.75, fontSize: 12, fontWeight: 800, marginBottom: 6 }}>Email</div>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            inputMode="email"
+            required
+            placeholder="you@example.com"
+            style={input}
+          />
+        </div>
+
+        <div>
+          <div style={{ opacity: 0.75, fontSize: 12, fontWeight: 800, marginBottom: 6 }}>Пароль</div>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            autoComplete="new-password"
+            required
+            placeholder="минимум 6 символов"
+            style={input}
+          />
+        </div>
+
+        <button type="submit" disabled={loading} style={btnPrimary}>
+          {loading ? "Создаю..." : "Создать аккаунт"}
         </button>
       </form>
-    </>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 10,
+          paddingTop: 10,
+          borderTop: "1px solid rgba(255,255,255,0.10)",
+        }}
+      >
+        <div style={{ opacity: 0.75, fontSize: 12, fontWeight: 900 }}>Или через</div>
+        <SocialButtons />
+      </div>
+    </div>
   );
 }
+
+const input: React.CSSProperties = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 14,
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(0,0,0,0.18)",
+  color: "inherit",
+  outline: "none",
+  fontWeight: 700,
+};
+
+const btnPrimary: React.CSSProperties = {
+  padding: "12px 14px",
+  borderRadius: 14,
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(255,255,255,0.10)",
+  color: "inherit",
+  fontWeight: 950,
+  cursor: "pointer",
+};

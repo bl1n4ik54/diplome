@@ -1,113 +1,115 @@
 "use client";
 
-// LoginForm: форма входа без дублей и с корректной разметкой
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import "../../AuthPage.css";
+import SocialButtons from "../components/SocialButtons";
 
 export default function LoginForm() {
-  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const [error, setError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
+    setLoading(true);
 
-    const form = e.currentTarget;
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-    const password = (form.elements.namedItem("password") as HTMLInputElement).value;
-
-    const result = await signIn("credentials", {
-      email,
+    const res = await signIn("credentials", {
+      email: email.trim(),
       password,
-      redirect: false,
-      // rememberMe пока никуда не передаём (NextAuth сам хранит сессию),
-      // но состояние оставляем для UI:
-      // rememberMe,
+      redirect: true,
+      callbackUrl: "/",
     });
 
-    setIsLoading(false);
+    // Если redirect=true — обычно сюда не дойдёт при успехе,
+    // но при ошибке NextAuth может вернуть res?.error
+    if (res?.error) setError("Неверный email или пароль");
 
-    if (result?.error) {
-      setError("Неверный email или пароль. Проверьте данные и попробуйте снова.");
-      return;
-    }
-
-    router.push("/");
-    router.refresh();
-  };
+    setLoading(false);
+  }
 
   return (
-    <>
-      {error && <div className="error-message">{error}</div>}
+    <div style={{ display: "grid", gap: 12 }}>
+      {error && (
+        <div
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(239,68,68,0.22)",
+            background: "rgba(239,68,68,0.10)",
+            fontWeight: 800,
+          }}
+        >
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="auth-form">
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
+        <div>
+          <div style={{ opacity: 0.75, fontSize: 12, fontWeight: 800, marginBottom: 6 }}>Email</div>
           <input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="your.email@example.com"
-            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
+            inputMode="email"
+            required
+            placeholder="you@example.com"
+            style={input}
           />
         </div>
 
-        <div className="form-group">
-          <div className="form-row">
-            <label htmlFor="password">Пароль</label>
-          </div>
-
-          <div className="password-input-wrapper">
-            <input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Введите ваш пароль"
-              required
-              autoComplete="current-password"
-            />
-
-            <button
-              type="button"
-              className="toggle-password"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
-            >
-              {showPassword ? "👁️" : "👁️‍🗨️"}
-            </button>
-          </div>
+        <div>
+          <div style={{ opacity: 0.75, fontSize: 12, fontWeight: 800, marginBottom: 6 }}>Пароль</div>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            autoComplete="current-password"
+            required
+            placeholder="••••••••"
+            style={input}
+          />
         </div>
 
-        <div className="form-actions">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            <span>Запомнить меня</span>
-          </label>
-
-          <button type="submit" className="btn btn-primary" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <span className="loading-spinner"></span>
-                Вход...
-              </>
-            ) : (
-              "Войти"
-            )}
-          </button>
-        </div>
+        <button type="submit" disabled={loading} style={btnPrimary}>
+          {loading ? "Входим..." : "Войти"}
+        </button>
       </form>
-    </>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 10,
+          paddingTop: 10,
+          borderTop: "1px solid rgba(255,255,255,0.10)",
+        }}
+      >
+        <div style={{ opacity: 0.75, fontSize: 12, fontWeight: 900 }}>Или войти через</div>
+        <SocialButtons />
+      </div>
+    </div>
   );
 }
+
+const input: React.CSSProperties = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 14,
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(0,0,0,0.18)",
+  color: "inherit",
+  outline: "none",
+  fontWeight: 700,
+};
+
+const btnPrimary: React.CSSProperties = {
+  padding: "12px 14px",
+  borderRadius: 14,
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(255,255,255,0.10)",
+  color: "inherit",
+  fontWeight: 950,
+  cursor: "pointer",
+};

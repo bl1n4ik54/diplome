@@ -18,7 +18,7 @@ export default async function Header() {
     <header className={styles.header}>
       <div className={styles.inner}>
         <Link href="/" className={styles.logo}>
-          Название
+          MangaWorld
         </Link>
 
         <nav className={styles.nav}>

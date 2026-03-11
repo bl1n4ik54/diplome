@@ -54,7 +54,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
     setLoading(true);
     setError("");
     const res = await fetch(`/api/users/${userId}`);
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
     setLoading(false);
 
     if (!res.ok) {
@@ -79,7 +79,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: Number(userId) }),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
     if (!res.ok) return setError(data?.error ?? "Не удалось отправить заявку");
     await load();
   }
@@ -91,7 +91,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ requestId }),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
     if (!res.ok) return setError(data?.error ?? "Не удалось принять");
     await load();
   }
@@ -103,7 +103,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: Number(userId) }),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
     if (!res.ok) return setError(data?.error ?? "Не удалось удалить/отменить");
     await load();
   }
@@ -112,24 +112,19 @@ export default function UserPageClient({ userId }: { userId: string }) {
 
   return (
     <div className="home-page">
-      <nav className="home-header">
-        <div className="nav-container">
-          <Link href="/" className="logo">Название</Link>
-          <div className="nav-links">
-            <Link href="/profile" className="btn btn-ghost">Профиль</Link>
-          </div>
-        </div>
-      </nav>
+      {/* ❌ убрали фейковый nav/header — используется общий Header из layout.tsx */}
 
       <main className="home-main">
         <div className="profile-wrap">
           <div className="profile-hero">
-            <h1 className="home-title">
-              {loading ? "Загрузка..." : user ? user.username : "Пользователь"}
-            </h1>
-            <p className="home-subtitle">
-              Страница пользователя и его списков
-            </p>
+            <h1 className="home-title">{loading ? "Загрузка..." : user ? user.username : "Пользователь"}</h1>
+            <p className="home-subtitle">Страница пользователя и его списков</p>
+
+            <div style={{ marginTop: 10 }}>
+              <Link href="/profile" className="btn btn-ghost">
+                ← В профиль
+              </Link>
+            </div>
           </div>
 
           {error && <div className="profile-error">{error}</div>}
@@ -141,14 +136,10 @@ export default function UserPageClient({ userId }: { userId: string }) {
             </div>
 
             {!loading && friendship.state === "guest" && (
-              <div className="profile-muted">
-                Войди в аккаунт, чтобы добавлять друзей и смотреть списки.
-              </div>
+              <div className="profile-muted">Войди в аккаунт, чтобы добавлять друзей и смотреть списки.</div>
             )}
 
-            {!loading && friendship.state === "self" && (
-              <div className="profile-muted">Это твоя страница 🙂</div>
-            )}
+            {!loading && friendship.state === "self" && <div className="profile-muted">Это твоя страница 🙂</div>}
 
             {!loading && friendship.state === "none" && (
               <div className="profile-row">
@@ -196,11 +187,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
               <div className="profile-card-title">Списки</div>
             </div>
 
-            {!loading && !canSeeLists && (
-              <div className="profile-muted">
-                Списки доступны только друзьям.
-              </div>
-            )}
+            {!loading && !canSeeLists && <div className="profile-muted">Списки доступны только друзьям.</div>}
           </div>
 
           {canSeeLists && (
@@ -224,9 +211,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
                             </div>
                             <div className="profile-item-info">
                               <div className="profile-item-title">{it.title}</div>
-                              <div className="profile-muted">
-                                progress: {it.progress}
-                              </div>
+                              <div className="profile-muted">progress: {it.progress}</div>
                             </div>
                           </div>
 

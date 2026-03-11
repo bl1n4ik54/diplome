@@ -309,6 +309,7 @@ export default function ProfileClient({ user }: { user: any }) {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Например: Egor"
+                    maxLength={15}
                   />
                   <div className="profile-hint">Минимум 3 символа. Можно оставить пустым.</div>
                 </div>

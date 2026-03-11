@@ -12,7 +12,7 @@ function sanitizeUsername(input: unknown) {
   if (!raw) return null;
 
   // базовые ограничения
-  const v = raw.slice(0, 50);
+  const v = raw.slice(0, 15);
   if (v.length < 3) return "__too_short__";
   return v;
 }
