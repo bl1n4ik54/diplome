@@ -38,13 +38,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
   const [lists, setLists] = useState<ListItem[] | null>(null);
 
   const grouped = useMemo(() => {
-    const g: Record<Status, ListItem[]> = {
-      reading: [],
-      planned: [],
-      completed: [],
-      on_hold: [],
-      dropped: [],
-    };
+    const g: Record<Status, ListItem[]> = { reading: [], planned: [], completed: [], on_hold: [], dropped: [] };
     if (!lists) return g;
     for (const it of lists) g[it.status].push(it);
     return g;
@@ -64,7 +58,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
 
     setUser(data.user);
     setFriendship(data.friendship);
-    setLists(data.lists); // может быть null (если нет доступа)
+    setLists(data.lists); // null если нет доступа
   }
 
   useEffect(() => {
@@ -111,122 +105,148 @@ export default function UserPageClient({ userId }: { userId: string }) {
   const canSeeLists = lists !== null;
 
   return (
-    <div className="home-page">
-      {/* ❌ убрали фейковый nav/header — используется общий Header из layout.tsx */}
+    <div className="mw-page">
+      <section className="mw-hero">
+        <div className="mw-container">
+          <div className="mw-heroTop">
+            <div style={{ display: "grid", gap: 10 }}>
+              <div className="mw-pill">👤 Пользователь</div>
+              <h1 className="mw-h1" style={{ fontSize: 40 }}>
+                {loading ? "Загрузка..." : user ? user.username : "Пользователь"}
+              </h1>
+              <div className="mw-subtitle">Страница пользователя и его списков (если есть доступ).</div>
 
-      <main className="home-main">
-        <div className="profile-wrap">
-          <div className="profile-hero">
-            <h1 className="home-title">{loading ? "Загрузка..." : user ? user.username : "Пользователь"}</h1>
-            <p className="home-subtitle">Страница пользователя и его списков</p>
+              <div className="mw-row">
+                <Link className="mw-btn" href="/profile">
+                  ← В профиль
+                </Link>
+                <Link className="mw-btn" href="/catalog">
+                  Каталог
+                </Link>
+              </div>
+            </div>
 
-            <div style={{ marginTop: 10 }}>
-              <Link href="/profile" className="btn btn-ghost">
-                ← В профиль
-              </Link>
+            <div className="mw-card" style={{ width: 360, maxWidth: "100%" }}>
+              <div className="mw-muted" style={{ fontWeight: 950, letterSpacing: 1.2 }}>
+                ДРУЖБА
+              </div>
+
+              <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                {!loading && friendship.state === "guest" ? (
+                  <div className="mw-muted2">Войди в аккаунт, чтобы добавлять друзей и смотреть списки.</div>
+                ) : null}
+
+                {!loading && friendship.state === "self" ? <div className="mw-muted2">Это твоя страница 🙂</div> : null}
+
+                {!loading && friendship.state === "none" ? (
+                  <div className="mw-row" style={{ justifyContent: "space-between" }}>
+                    <div className="mw-muted2">Вы не друзья</div>
+                    <button className="mw-btn mw-btnPrimary" onClick={addFriend}>
+                      Добавить
+                    </button>
+                  </div>
+                ) : null}
+
+                {!loading && friendship.state === "outgoing" ? (
+                  <div className="mw-row" style={{ justifyContent: "space-between" }}>
+                    <div className="mw-muted2">Заявка отправлена</div>
+                    <button className="mw-btn" onClick={removeFriend}>
+                      Отменить
+                    </button>
+                  </div>
+                ) : null}
+
+                {!loading && friendship.state === "incoming" ? (
+                  <div className="mw-row" style={{ justifyContent: "space-between" }}>
+                    <div className="mw-muted2">Вам пришла заявка</div>
+                    <div className="mw-row">
+                      <button className="mw-btn mw-btnPrimary" onClick={() => accept(friendship.requestId)}>
+                        Принять
+                      </button>
+                      <button className="mw-btn" onClick={removeFriend}>
+                        Отклонить
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {!loading && friendship.state === "friends" ? (
+                  <div className="mw-row" style={{ justifyContent: "space-between" }}>
+                    <div className="mw-muted2">Вы друзья ✅</div>
+                    <button className="mw-btn" onClick={removeFriend}>
+                      Удалить
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
 
-          {error && <div className="profile-error">{error}</div>}
-
-          {/* Карточка статуса дружбы */}
-          <div className="profile-card">
-            <div className="profile-card-head">
-              <div className="profile-card-title">Дружба</div>
+          {error ? (
+            <div className="mw-cardFlat" style={{ marginTop: 12, borderColor: "rgba(239,68,68,0.22)", background: "rgba(239,68,68,0.10)" }}>
+              <b>Ошибка:</b> {error}
             </div>
+          ) : null}
+        </div>
+      </section>
 
-            {!loading && friendship.state === "guest" && (
-              <div className="profile-muted">Войди в аккаунт, чтобы добавлять друзей и смотреть списки.</div>
-            )}
-
-            {!loading && friendship.state === "self" && <div className="profile-muted">Это твоя страница 🙂</div>}
-
-            {!loading && friendship.state === "none" && (
-              <div className="profile-row">
-                <div className="profile-muted">Вы не друзья</div>
-                <button className="btn btn-primary" onClick={addFriend}>
-                  Добавить в друзья
-                </button>
+      <main className="mw-container mw-main">
+        <section className="mw-cardFlat">
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
+            <div>
+              <div className="mw-muted" style={{ fontWeight: 950, letterSpacing: 1.2 }}>
+                СПИСКИ
               </div>
-            )}
-
-            {!loading && friendship.state === "outgoing" && (
-              <div className="profile-row">
-                <div className="profile-muted">Заявка отправлена</div>
-                <button className="btn btn-ghost" onClick={removeFriend}>
-                  Отменить
-                </button>
+              <div className="mw-title" style={{ marginTop: 6 }}>
+                Списки пользователя
               </div>
-            )}
-
-            {!loading && friendship.state === "incoming" && (
-              <div className="profile-row">
-                <div className="profile-muted">Вам пришла заявка от этого пользователя</div>
-                <button className="btn btn-primary" onClick={() => accept(friendship.requestId)}>
-                  Принять
-                </button>
-                <button className="btn btn-ghost" onClick={removeFriend}>
-                  Отклонить
-                </button>
+              <div className="mw-subtitle" style={{ marginTop: 8 }}>
+                {canSeeLists ? "Доступ разрешён — можно смотреть." : "Списки доступны только друзьям."}
               </div>
-            )}
-
-            {!loading && friendship.state === "friends" && (
-              <div className="profile-row">
-                <div className="profile-muted">Вы друзья ✅</div>
-                <button className="btn btn-ghost" onClick={removeFriend}>
-                  Удалить из друзей
-                </button>
-              </div>
-            )}
+            </div>
           </div>
 
-          {/* Списки друга */}
-          <div className="profile-card">
-            <div className="profile-card-head">
-              <div className="profile-card-title">Списки</div>
+          {!loading && !canSeeLists ? (
+            <div className="mw-muted2" style={{ marginTop: 12 }}>
+              Добавь в друзья (или дождись подтверждения), чтобы увидеть списки.
             </div>
+          ) : null}
 
-            {!loading && !canSeeLists && <div className="profile-muted">Списки доступны только друзьям.</div>}
-          </div>
-
-          {canSeeLists && (
-            <div className="profile-grid">
-              {(["reading", "planned", "completed", "on_hold", "dropped"] as Status[]).map((st) => (
-                <section key={st} className="profile-card">
-                  <div className="profile-card-head">
-                    <div className="profile-card-title">{STATUS_LABEL[st]}</div>
-                    <div className="profile-muted">{grouped[st].length}</div>
+          {canSeeLists ? (
+            <div className="mw-gridCards" style={{ marginTop: 14, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+              {(Object.keys(grouped) as Status[]).map((st) => (
+                <div key={st} className="mw-cardFlat">
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
+                    <div style={{ fontWeight: 950 }}>{STATUS_LABEL[st]}</div>
+                    <span className="mw-badge">{grouped[st].length}</span>
                   </div>
 
-                  {grouped[st].length === 0 ? (
-                    <div className="profile-muted">Пусто</div>
-                  ) : (
-                    <div className="profile-list">
-                      {grouped[st].map((it) => (
-                        <div key={it.id} className="profile-item">
-                          <div className="profile-item-top">
-                            <div className="profile-cover small" aria-hidden>
-                              {it.coverUrl ? <img src={it.coverUrl} alt="" /> : <span>📙</span>}
+                  <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                    {grouped[st].length === 0 ? (
+                      <div className="mw-muted2">Пусто</div>
+                    ) : (
+                      grouped[st].map((it) => (
+                        <Link key={it.id} href={`/comics/${it.comicId}`} className="mw-cardLink" style={{ padding: 10 }}>
+                          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                            <div className="mw-cover" aria-hidden>
+                              {it.coverUrl ? <img src={it.coverUrl} alt="" /> : <span>📘</span>}
                             </div>
-                            <div className="profile-item-info">
-                              <div className="profile-item-title">{it.title}</div>
-                              <div className="profile-muted">progress: {it.progress}</div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {it.title}
+                              </div>
+                              <div className="mw-muted">progress: {it.progress}</div>
                             </div>
                           </div>
-
-                          <Link href={`/comics/${it.comicId}`} className="btn btn-ghost">
-                            Открыть
-                          </Link>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </section>
+                        </Link>
+                      ))
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
-          )}
-        </div>
+          ) : null}
+        </section>
       </main>
     </div>
   );

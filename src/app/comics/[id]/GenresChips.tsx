@@ -2,86 +2,34 @@
 
 import { useMemo, useState } from "react";
 
-export default function GenresChips({
-  genres,
-  limit = 8,
-}: {
-  genres: string[];
-  limit?: number;
-}) {
+export default function GenresChips({ genres }: { genres: string[] }) {
   const [open, setOpen] = useState(false);
 
-  const cleaned = useMemo(() => {
-    return (genres ?? [])
-      .map((g) => String(g).trim())
-      .filter(Boolean);
-  }, [genres]);
+  const max = 8;
+  const shown = useMemo(() => (open ? genres : genres.slice(0, max)), [open, genres]);
+  const rest = Math.max(0, genres.length - max);
 
-  const total = cleaned.length;
-  const hasMore = total > limit;
-
-  const visible = open ? cleaned : cleaned.slice(0, limit);
-  const remaining = hasMore ? total - limit : 0;
-
-  if (total === 0) return <span style={{ opacity: 0.7 }}>Жанры не указаны</span>;
+  if (genres.length === 0) return null;
 
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-      {visible.map((name) => (
-        <span
-          key={name}
-          style={{
-            padding: "6px 10px",
-            borderRadius: 999,
-            border: "1px solid rgba(255,255,255,0.14)",
-            background: "rgba(255,255,255,0.04)",
-            fontSize: 12,
-            fontWeight: 700,
-            opacity: 0.9,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {name}
+      {shown.map((g) => (
+        <span key={g} className="mw-badge">
+          {g}
         </span>
       ))}
 
-      {hasMore && !open && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          style={{
-            padding: "6px 10px",
-            borderRadius: 999,
-            border: "1px solid rgba(255,255,255,0.14)",
-            background: "rgba(255,255,255,0.06)",
-            color: "inherit",
-            fontSize: 12,
-            fontWeight: 900,
-            cursor: "pointer",
-          }}
-        >
-          + ещё ({remaining})
+      {!open && rest > 0 ? (
+        <button type="button" className="mw-btn" onClick={() => setOpen(true)}>
+          + ещё ({rest})
         </button>
-      )}
+      ) : null}
 
-      {hasMore && open && (
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          style={{
-            padding: "6px 10px",
-            borderRadius: 999,
-            border: "1px solid rgba(255,255,255,0.14)",
-            background: "rgba(255,255,255,0.06)",
-            color: "inherit",
-            fontSize: 12,
-            fontWeight: 900,
-            cursor: "pointer",
-          }}
-        >
-          Свернуть
+      {open && rest > 0 ? (
+        <button type="button" className="mw-btn" onClick={() => setOpen(false)}>
+          свернуть
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

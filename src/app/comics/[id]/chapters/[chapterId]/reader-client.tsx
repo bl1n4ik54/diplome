@@ -1,74 +1,63 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-type PageItem = { pageNumber: number; imageUrl: string };
-type ChapterNav = { id: number; chapterNumber: number; title: string | null };
+type ChapterItem = { id: number; chapterNumber: number };
 
 export default function ReaderClient({
   comicId,
+  comicTitle,
+  authorName,
   chapterId,
+  chapterNumber,
   pages,
-  initialPage,
+  page,
+  total,
+  chapters,
+  prevChapterHref,
   nextChapterHref,
-  chaptersNav,
 }: {
   comicId: number;
+  comicTitle: string;
+  authorName: string | null;
   chapterId: number;
-  pages: PageItem[];
-  initialPage: number;
+  chapterNumber: number;
+  pages: string[];
+  page: number;
+  total: number;
+  chapters: ChapterItem[];
+  prevChapterHref: string | null;
   nextChapterHref: string | null;
-  chaptersNav: ChapterNav[];
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const total = pages.length;
+  const [cur, setCur] = useState(page);
+  const [openChapters, setOpenChapters] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
 
-  const clamp = (n: number) => {
-    if (total <= 0) return 1;
-    return Math.min(Math.max(1, n), total);
-  };
-
-  const [page, setPage] = useState(clamp(initialPage));
-
-  // --- refs для стабильного keydown listener
-  const pageRef = useRef(page);
-  const totalRef = useRef(total);
-  const nextHrefRef = useRef<string | null>(nextChapterHref);
-
+  // sync with url changes
   useEffect(() => {
-    pageRef.current = page;
+    setCur(page);
   }, [page]);
 
+  // close dropdown on outside click
   useEffect(() => {
-    totalRef.current = total;
-  }, [total]);
+    function onDown(e: MouseEvent) {
+      if (!wrapRef.current) return;
+      if (!wrapRef.current.contains(e.target as Node)) setOpenChapters(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
 
-  useEffect(() => {
-    nextHrefRef.current = nextChapterHref ?? null;
-  }, [nextChapterHref]);
+  const imgUrl = pages[Math.max(0, cur - 1)] ?? null;
 
-  // синхронизация с URL (back/forward)
-  useEffect(() => {
-    const sp = Number(searchParams.get("page") ?? "1") || 1;
-    setPage(clamp(sp));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, total]);
+  const hrefForPage = (p: number) => `/comics/${comicId}/chapters/${chapterId}?page=${p}`;
 
-  const current = useMemo(() => {
-    if (total === 0) return null;
-    return pages.find((p) => p.pageNumber === page) ?? pages[page - 1] ?? null;
-  }, [pages, page, total]);
-
-  function go(n: number) {
-    const next = clamp(n);
-    setPage(next);
-    router.replace(`?page=${next}`);
-  }
-
-  function saveProgressNow(p: number) {
+  async function saveProgress(p: number) {
+    // тихо пытаемся сохранить
     fetch("/api/reading/progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -76,192 +65,168 @@ export default function ReaderClient({
     }).catch(() => null);
   }
 
-  function pushTo(href: string) {
-    saveProgressNow(pageRef.current);
-    router.push(href);
+  async function go(p: number) {
+    const nextP = Math.max(1, Math.min(total, p));
+    setCur(nextP);
+    await saveProgress(nextP);
+    router.push(hrefForPage(nextP));
   }
 
-  function pushNextChapter() {
-    const href = nextHrefRef.current;
-    if (!href) return;
-    pushTo(href);
-  }
-
-  function prev() {
-    if (page > 1) go(page - 1);
-  }
-
-  function next() {
-    if (page < total) {
-      go(page + 1);
+  async function next() {
+    if (cur < total) {
+      await go(cur + 1);
       return;
     }
-    if (page >= total && nextChapterHref) {
-      pushNextChapter();
+    if (cur >= total && nextChapterHref) {
+      await saveProgress(cur);
+      router.push(nextChapterHref);
     }
   }
 
-  // ✅ keydown listener один раз
+  async function prev() {
+    if (cur > 1) {
+      await go(cur - 1);
+      return;
+    }
+    if (cur <= 1 && prevChapterHref) {
+      router.push(prevChapterHref);
+    }
+  }
+
+  // keyboard
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "ArrowLeft") {
-        const p = pageRef.current;
-        if (p > 1) {
-          const nextP = p - 1;
-          setPage(nextP);
-          router.replace(`?page=${nextP}`);
-        }
-      }
-
-      if (e.key === "ArrowRight") {
-        const p = pageRef.current;
-        const t = totalRef.current;
-
-        if (p < t) {
-          const nextP = p + 1;
-          setPage(nextP);
-          router.replace(`?page=${nextP}`);
-          return;
-        }
-
-        if (p >= t && nextHrefRef.current) {
-          pushNextChapter();
-        }
-      }
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "Escape") setOpenChapters(false);
     }
-
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // сохраняем прогресс (debounce)
-  const tRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (total === 0) return;
-
-    if (tRef.current) window.clearTimeout(tRef.current);
-    tRef.current = window.setTimeout(() => {
-      saveProgressNow(page);
-    }, 250);
-
-    return () => {
-      if (tRef.current) window.clearTimeout(tRef.current);
-    };
-  }, [comicId, chapterId, page, total]);
-
-  // --- выпадашка на счётчике
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const pickerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!pickerOpen) return;
-
-    function onDown(e: MouseEvent) {
-      const el = pickerRef.current;
-      if (!el) return;
-      if (!el.contains(e.target as Node)) setPickerOpen(false);
-    }
-
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [pickerOpen]);
-
-  function goChapter(chId: number) {
-    setPickerOpen(false);
-    pushTo(`/comics/${comicId}/chapters/${chId}?page=1`);
-  }
-
-  function goPage(p: number) {
-    setPickerOpen(false);
-    go(p);
-  }
-
-  if (total === 0) return null;
-
-  const nextBtnText = page >= total && nextChapterHref ? "След. глава →" : "Стр. →";
-  const nextDisabled = page < total ? false : !nextChapterHref;
+  }, [cur, total, nextChapterHref, prevChapterHref]);
 
   return (
-    <div className="readerBody">
-      <div className="readerControls">
-        <button className="readerBtn" onClick={prev} disabled={page <= 1}>
-          ← Стр.
-        </button>
-
-        {/* ✅ СЧЁТЧИК = кнопка + поповер */}
-        <div className="readerPickerWrap" ref={pickerRef}>
-          <button
-            type="button"
-            className="readerCounterBtn"
-            onClick={() => setPickerOpen((v) => !v)}
-            aria-haspopup="dialog"
-            aria-expanded={pickerOpen}
-            title="Нажми, чтобы перейти на страницу/главу"
-          >
-            Стр. <b>{page}</b> из <b>{total}</b> ▾
-          </button>
-
-          {pickerOpen && (
-            <div className="readerPicker">
-              <div className="readerPickerTitle">Переход</div>
-
-              <div className="readerPickerRow">
-                <div className="readerPickerLabel">Страница</div>
-                <select
-                  className="readerPickerSelect"
-                  value={page}
-                  onChange={(e) => goPage(Number(e.target.value))}
-                >
-                  {Array.from({ length: total }, (_, i) => i + 1).map((p) => (
-                    <option key={p} value={p}>
-                      Стр. {p}
-                    </option>
-                  ))}
-                </select>
+    <div className="mw-page">
+      <section className="mw-hero" style={{ paddingBottom: 10 }}>
+        <div className="mw-container">
+          <div className="mw-heroTop">
+            <div style={{ display: "grid", gap: 8 }}>
+              <div className="mw-pill">📖 Читалка</div>
+              <h1 className="mw-h1" style={{ fontSize: 34 }}>
+                {comicTitle}
+              </h1>
+              <div className="mw-subtitle">
+                {authorName ? `${authorName} • ` : ""}Глава {chapterNumber}
               </div>
-
-              <div className="readerPickerRow">
-                <div className="readerPickerLabel">Глава</div>
-                <select
-                  className="readerPickerSelect"
-                  value={chapterId}
-                  onChange={(e) => goChapter(Number(e.target.value))}
-                >
-                  {chaptersNav.map((ch) => (
-                    <option key={ch.id} value={ch.id}>
-                      Глава {ch.chapterNumber}
-                      {ch.title ? ` — ${ch.title}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button type="button" className="readerPickerClose" onClick={() => setPickerOpen(false)}>
-                Закрыть
-              </button>
             </div>
-          )}
+
+            <div className="mw-actions">
+              <Link className="mw-btn" href={`/comics/${comicId}`}>
+                ← К тайтлу
+              </Link>
+              <Link className="mw-btn" href="/catalog">
+                Каталог
+              </Link>
+            </div>
+          </div>
+
+          {/* top bar */}
+          <div className="mw-cardFlat" style={{ marginTop: 12 }}>
+            <div className="mw-row" style={{ justifyContent: "space-between" }} ref={wrapRef}>
+              <div className="mw-row">
+                <button className="mw-btn" onClick={prev} disabled={!prevChapterHref && cur === 1}>
+                  ←
+                </button>
+                <button className="mw-btn mw-btnPrimary" onClick={next} disabled={!nextChapterHref && cur === total}>
+                  →
+                </button>
+              </div>
+
+              {/* page counter (opens chapter dropdown) */}
+              <button
+                className="mw-btn"
+                onClick={() => setOpenChapters((v) => !v)}
+                style={{ position: "relative" }}
+                type="button"
+              >
+                Стр. {cur}/{total} • Глава {chapterNumber} ▾
+              </button>
+
+              {openChapters ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 10px)",
+                    right: 14,
+                    width: 320,
+                    maxHeight: 320,
+                    overflow: "auto",
+                    background: "#0A0A0F",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    borderRadius: 16,
+                    padding: 10,
+                    boxShadow: "0 18px 60px rgba(0,0,0,0.55)",
+                    zIndex: 50,
+                  }}
+                >
+                  <div className="mw-muted" style={{ fontWeight: 950, letterSpacing: 1.2, marginBottom: 8 }}>
+                    ВЫБОР ГЛАВЫ
+                  </div>
+
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {chapters.map((ch) => (
+                      <Link
+                        key={ch.id}
+                        href={`/comics/${comicId}/chapters/${ch.id}?page=1`}
+                        className="mw-cardLink"
+                        style={{
+                          padding: 10,
+                          borderRadius: 14,
+                          background: ch.id === chapterId ? "rgba(236,72,153,0.12)" : "rgba(255,255,255,0.02)",
+                        }}
+                        onClick={() => setOpenChapters(false)}
+                      >
+                        Глава {ch.chapterNumber}
+                      </Link>
+                    ))}
+                  </div>
+
+                  <button className="mw-btn" style={{ marginTop: 10, width: "100%" }} onClick={() => setOpenChapters(false)}>
+                    Закрыть
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
+      </section>
 
-        <button className="readerBtn" onClick={next} disabled={nextDisabled}>
-          {nextBtnText}
-        </button>
-      </div>
+      <main className="mw-container mw-main" style={{ gap: 14 }}>
+        <div className="mw-cardFlat" style={{ padding: 14 }}>
+          <div style={{ display: "grid", placeItems: "center" }}>
+            {imgUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imgUrl}
+                alt={`page ${cur}`}
+                style={{
+                  width: "min(900px, 100%)",
+                  height: "auto",
+                  borderRadius: 18,
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: "rgba(255,255,255,0.02)",
+                }}
+              />
+            ) : (
+              <div className="mw-muted2">Нет страницы</div>
+            )}
+          </div>
 
-      <div className="readerImageBox">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="readerImg" src={current?.imageUrl ?? ""} alt={`Page ${page}`} />
-      </div>
-
-      <div className="readerControls bottom">
-        <button className="readerBtn" onClick={() => go(1)} disabled={page === 1}>
-          В начало
-        </button>
-        <button className="readerBtn" onClick={() => go(total)} disabled={page === total}>
-          В конец
-        </button>
-      </div>
+          <div className="mw-muted2" style={{ marginTop: 10, lineHeight: 1.6 }}>
+            Подсказка: стрелки клавиатуры ← → листают страницы. В конце главы → перейдёт на следующую главу (если есть).
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

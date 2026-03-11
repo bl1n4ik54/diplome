@@ -1,0 +1,150 @@
+:root{
+  --mw-bg: #0A0A0F;
+  --mw-border: rgba(255,255,255,0.10);
+  --mw-border2: rgba(255,255,255,0.14);
+  --mw-card: rgba(255,255,255,0.02);
+  --mw-card2: rgba(255,255,255,0.03);
+  --mw-muted: rgba(255,255,255,0.75);
+  --mw-muted2: rgba(255,255,255,0.65);
+  --mw-shadow: 0 18px 60px rgba(0,0,0,0.35);
+}
+
+html, body { background: var(--mw-bg); }
+body { color: #fff; }
+a { color: inherit; }
+
+.mw-page { min-height: calc(100vh - 72px); background: var(--mw-bg); }
+
+.mw-container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
+.mw-main { padding: 24px 0 48px; display: grid; gap: 22px; }
+
+.mw-hero{
+  padding: 34px 0 18px;
+  background:
+    radial-gradient(900px 420px at 16% 0%, rgba(99,102,241,0.20), transparent 60%),
+    radial-gradient(900px 420px at 84% 0%, rgba(236,72,153,0.16), transparent 60%),
+    var(--mw-bg);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.mw-heroTop { display:flex; justify-content:space-between; gap:14px; align-items:flex-end; flex-wrap:wrap; }
+.mw-pill{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:999px;
+  border:1px solid var(--mw-border2);
+  background: rgba(255,255,255,0.06);
+  font-weight:900; font-size:12px; opacity:.95;
+  width: fit-content;
+}
+.mw-h1{ margin:0; font-size:44px; letter-spacing:-1px; font-weight:950; line-height:1.03; }
+.mw-title{ margin:0; font-size:28px; letter-spacing:-0.4px; font-weight:950; }
+.mw-subtitle{ margin-top:8px; opacity:.78; line-height:1.6; max-width: 980px; }
+.mw-actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+.mw-card{
+  border: 1px solid var(--mw-border);
+  background: var(--mw-card);
+  border-radius: 22px;
+  padding: 14px;
+  box-shadow: var(--mw-shadow);
+}
+.mw-cardFlat{
+  border: 1px solid var(--mw-border);
+  background: var(--mw-card);
+  border-radius: 22px;
+  padding: 14px;
+}
+.mw-cardLink{
+  border: 1px solid var(--mw-border);
+  background: var(--mw-card);
+  border-radius: 18px;
+  padding: 12px;
+  text-decoration:none;
+  display:grid;
+  gap:10px;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease, opacity .12s ease;
+}
+.mw-cardLink:hover{ background: rgba(255,255,255,0.03); opacity: .96; transform: translateY(-1px); }
+
+.mw-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.mw-grid{ display:grid; gap:12px; }
+.mw-gridCards{ display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.mw-gridWide{ display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+
+.mw-badge{
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--mw-border2);
+  background: rgba(255,255,255,0.06);
+  display:inline-block;
+  font-weight:900;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.mw-btn{
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid var(--mw-border2);
+  background: rgba(255,255,255,0.06);
+  color: inherit;
+  font-weight:950;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.mw-btn:hover{ background: rgba(255,255,255,0.09); }
+.mw-btnPrimary{ background: rgba(236,72,153,0.14); }
+.mw-btnPrimary:hover{ background: rgba(236,72,153,0.18); }
+
+.mw-input{
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--mw-border2);
+  background: rgba(0,0,0,0.18);
+  color: inherit;
+  outline: none;
+  font-weight: 800;
+}
+
+/* ✅ УМЕНЬШЕНО В 1.5 РАЗА (было 72, стало 48) */
+.mw-cover{
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.02);
+  display:grid;
+  place-items:center;
+  flex: 0 0 auto;
+}
+.mw-cover img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+.mw-muted{ opacity: .75; font-size: 12px; }
+.mw-muted2{ opacity: .65; font-size: 12px; }
+
+.mw-divider{ height:1px; background: rgba(255,255,255,0.10); border:0; }
+
+/* Унификация старых .btn классов (профиль/юзер/админ) */
+.btn{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--mw-border2);
+  background: rgba(255,255,255,0.06);
+  color:inherit;
+  font-weight:900;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.btn:hover{ background: rgba(255,255,255,0.09); }
+.btn-primary{ background: rgba(236,72,153,0.14); font-weight:950; }
+.btn-primary:hover{ background: rgba(236,72,153,0.18); }
+.btn-ghost{ background: rgba(255,255,255,0.03); }
+.btn-ghost:hover{ background: rgba(255,255,255,0.07); }
