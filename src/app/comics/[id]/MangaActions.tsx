@@ -1,9 +1,17 @@
 "use client";
 
-export default function MangaActions({ comicId, isAuthed }: { comicId: number; isAuthed: boolean }) {
+export default function MangaActions({
+  comicId,
+  isAuthed,
+  readHref,
+}: {
+  comicId: number;
+  isAuthed: boolean;
+  readHref?: string | null;
+}) {
   async function add(status: "reading" | "planned") {
     if (!isAuthed) {
-      window.location.href = "/login";
+      window.location.href = "/auth/login";
       return;
     }
     await fetch("/api/profile/lists", {
@@ -11,6 +19,10 @@ export default function MangaActions({ comicId, isAuthed }: { comicId: number; i
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ comicId, status }),
     });
+
+    if (status === "reading" && readHref) {
+      window.location.href = readHref;
+    }
   }
 
   return (

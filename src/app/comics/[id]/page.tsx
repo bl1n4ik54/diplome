@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { eq, sql, desc, asc, and } from "drizzle-orm";
+import { eq, sql, asc, and } from "drizzle-orm";
 
 import { authOptions } from "../../api/auth/[...nextauth]/route";
 import { db } from "../../../server/db";
@@ -26,7 +26,7 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
 
   const session = await getServerSession(authOptions);
   const email = session?.user?.email ?? null;
-  const role = (session?.user as any)?.role ?? "user";
+  const role = session?.user?.role ?? "user";
   const isAdmin = role === "admin";
 
   const comic = await db
@@ -112,6 +112,7 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  const readHref = continueHref ?? (firstChapter ? `/comics/${comicId}/chapters/${firstChapter.id}?page=1` : null);
   const c = comic[0];
 
   return (
@@ -167,7 +168,7 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
                 </Link>
 
                 {isAdmin ? (
-                  <Link className="mw-btn" href={`/admin/comics/${comicId}`}>
+                  <Link className="mw-btn" href={`/admin/comics/${comicId}/add-chapter`}>
                     🛠️ Редактировать (admin)
                   </Link>
                 ) : null}
@@ -218,12 +219,12 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
                 {email ? (
                   <FavoriteButton comicId={comicId} initial={initialFav} />
                 ) : (
-                  <Link className="mw-btn" href="/login">
+                  <Link className="mw-btn" href="/auth/login">
                     ❤ Войти, чтобы добавлять в избранное
                   </Link>
                 )}
 
-                <MangaActions comicId={comicId} isAuthed={Boolean(email)} />
+                <MangaActions comicId={comicId} isAuthed={Boolean(email)} readHref={readHref} />
               </div>
             </div>
           </div>
@@ -270,7 +271,7 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
                         {ch.title ? ` — ${ch.title}` : ""}
                       </div>
                       <div className="mw-muted">
-                        {ch.createdAt ? new Date(ch.createdAt as any).toLocaleDateString("ru-RU") : "—"}
+                        {ch.createdAt ? new Date(ch.createdAt).toLocaleDateString("ru-RU") : "—"}
                       </div>
                     </div>
                     <span className="mw-badge">Открыть →</span>

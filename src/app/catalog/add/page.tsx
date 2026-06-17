@@ -1,4 +1,3 @@
-// Catalog Add Page: доступ только admin
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { eq } from "drizzle-orm";
@@ -8,6 +7,39 @@ import { db } from "../../../server/db";
 import { users } from "../../../server/db/schema";
 
 import AddComicForm from "./AddComicForm";
+import styles from "./add.module.css";
+
+function AccessDenied({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="mw-page">
+      <main className={`mw-container ${styles.gateWrap}`}>
+        <section className={`mw-card ${styles.gateCard}`}>
+          <span className="mw-pill">Ограниченный доступ</span>
+          <h1 className="mw-title" style={{ margin: 0 }}>
+            {title}
+          </h1>
+          <p className="mw-subtitle" style={{ margin: 0 }}>
+            {description}
+          </p>
+          <div className={styles.gateActions}>
+            <Link className="mw-btn mw-btnPrimary" href="/catalog">
+              В каталог
+            </Link>
+            <Link className="mw-btn" href="/">
+              На главную
+            </Link>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
 
 export default async function AddComicPage() {
   const session = await getServerSession(authOptions);
@@ -15,11 +47,10 @@ export default async function AddComicPage() {
 
   if (!email) {
     return (
-      <div style={{ padding: 24, maxWidth: 720, margin: "0 auto" }}>
-        <h1>Нет доступа</h1>
-        <p>Нужно войти как администратор.</p>
-        <Link href="/catalog">← Назад в каталог</Link>
-      </div>
+      <AccessDenied
+        title="Нет доступа"
+        description="Нужно войти под администратором, чтобы добавлять новые тайтлы."
+      />
     );
   }
 
@@ -28,11 +59,10 @@ export default async function AddComicPage() {
 
   if (!isAdmin) {
     return (
-      <div style={{ padding: 24, maxWidth: 720, margin: "0 auto" }}>
-        <h1>Нет доступа</h1>
-        <p>Добавлять мангу может только администратор.</p>
-        <Link href="/catalog">← Назад в каталог</Link>
-      </div>
+      <AccessDenied
+        title="Недостаточно прав"
+        description="Добавлять мангу может только администратор. Если это ошибка, проверь роль аккаунта."
+      />
     );
   }
 

@@ -1,0 +1,189 @@
+.heroCopy {
+  max-width: 760px;
+  display: grid;
+  gap: 10px;
+}
+
+.heroActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.formCard {
+  padding: clamp(16px, 2vw, 24px);
+}
+
+.formTop {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+.label {
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  font-weight: 900;
+  opacity: 0.72;
+}
+
+.textarea {
+  min-height: 150px;
+  resize: vertical;
+  line-height: 1.55;
+  font-family: inherit;
+}
+
+.select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, rgba(255, 255, 255, 0.72) 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.72) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+.hint {
+  font-size: 12px;
+  opacity: 0.65;
+  line-height: 1.45;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.submitBtn {
+  min-width: 180px;
+  justify-content: center;
+}
+
+.feedback {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--mw-border2);
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 800;
+}
+
+.feedbackError {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.feedbackSuccess {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.previewCard {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  border-radius: 22px;
+}
+
+.coverFrame {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  display: grid;
+  place-items: center;
+}
+
+.coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.coverStub {
+  font-weight: 900;
+  opacity: 0.56;
+  text-align: center;
+  padding: 0 14px;
+}
+
+.previewTitle {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.12;
+  font-weight: 950;
+}
+
+.previewAuthor {
+  margin-top: 6px;
+  opacity: 0.74;
+}
+
+.previewRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gateWrap {
+  min-height: calc(100vh - 72px);
+  display: grid;
+  align-items: center;
+}
+
+.gateCard {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 22px;
+  display: grid;
+  gap: 12px;
+}
+
+.gateActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 980px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

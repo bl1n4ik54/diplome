@@ -76,13 +76,20 @@
   display:grid;
   gap:12px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 @media (max-width: 1200px){
   .mwProfileGrid5{ grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 }
 
 /* status columns */
-.mwStatusCol{ box-shadow: none; }
+.mwStatusCol{
+  box-shadow: none;
+  max-width: 100%;
+  min-width: 0;
+}
 .mwStatusHead{
   display:flex;
   justify-content:space-between;
@@ -90,9 +97,13 @@
   gap:10px;
   margin-bottom: 10px;
 }
+.mwStatusHead .mwStrong{
+  min-width: 0;
+}
 .mwStatusList{
   display:grid;
   gap:10px;
+  min-width: 0;
 }
 .mwStatusItem{
   display:flex;
@@ -102,15 +113,19 @@
   background: rgba(255,255,255,0.02);
   border-radius: 16px;
   padding: 10px;
+  min-width: 0;
+  overflow: hidden;
 }
 .mwStatusLink{
   text-decoration:none;
   color:inherit;
   font-weight: 900;
   display:block;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 /* friends */
