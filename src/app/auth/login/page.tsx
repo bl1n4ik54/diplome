@@ -24,13 +24,12 @@ export default async function LoginPage() {
 
   return (
     <div
+      className="auth-shell"
       style={{
-        minHeight: "calc(100vh - 72px)",
         background: BG,
-        padding: "28px 16px 42px",
       }}
     >
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gap: 14 }}>
+      <div className="auth-wrap">
         <Link
           href="/"
           style={{
@@ -44,14 +43,7 @@ export default async function LoginPage() {
           ← MangaWorld
         </Link>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.2fr 1fr",
-            gap: 14,
-            alignItems: "stretch",
-          }}
-        >
+        <div className="auth-split">
           {/* Left hero */}
           <div
             style={{
@@ -79,7 +71,7 @@ export default async function LoginPage() {
               🔐 Вход в аккаунт
             </div>
 
-            <h1 style={{ margin: 0, fontSize: 30, letterSpacing: -0.6, fontWeight: 950 }}>
+            <h1 style={{ margin: 0, fontSize: "clamp(24px, 5vw, 30px)", letterSpacing: -0.6, fontWeight: 950 }}>
               С возвращением в MangaWorld
             </h1>
 
@@ -150,13 +142,6 @@ export default async function LoginPage() {
             </div>
           </div>
         </div>
-
-        {/* mobile fix */}
-        <style>{`
-          @media (max-width: 900px) {
-            .__grid { grid-template-columns: 1fr !important; }
-          }
-        `}</style>
       </div>
     </div>
   );

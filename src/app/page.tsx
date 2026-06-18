@@ -4,12 +4,14 @@ import { eq, sql } from "drizzle-orm";
 
 import { authOptions } from "./api/auth/[...nextauth]/route";
 import { db } from "../server/db";
-import { users, comics, authors, chapters, readingProgress, favorites } from "../server/db/schema";
+import { users, comics, authors, chapters, readingProgress } from "../server/db/schema";
 
 // Клиентские компоненты (импортируем)
 import { CardLink } from "../app/components/main-page-client/CardLink";
 import { Badge } from "../app/components/main-page-client/Badge";
+import { ContinueSwiper } from "../app/components/main-page-client/ContinueSwiper";
 import { Section } from "../app/components/main-page-client/Section";
+import TitleSearch from "./components/TitleSearch";
 
 // Типы и утилиты (можно оставить здесь)
 type ContinueItem = {
@@ -35,15 +37,6 @@ type ComicCard = {
   status: string | null;
 };
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-function pct(page: number, total: number) {
-  if (!total || total <= 0) return 0;
-  return clamp(Math.round((page / total) * 100), 0, 100);
-}
-
 function fmtRating(avg: number | null, count: number) {
   if (!avg || count <= 0) return "—";
   return `${avg.toFixed(1)} (${count})`;
@@ -52,7 +45,7 @@ function fmtRating(avg: number | null, count: number) {
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email ?? null;
-  const role = (session?.user as any)?.role ?? "user";
+  const role = session?.user?.role ?? "user";
 
   // --- Данные для "Продолжить чтение"
   let continueItems: ContinueItem[] = [];
@@ -173,9 +166,9 @@ export default async function HomePage() {
           }}
         />
 
-        <div style={{ position: "relative", maxWidth: 1200, margin: "0 auto", padding: "48px 24px 32px" }}>
+        <div className="home-heroInner">
           {/* Шапка */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
+          <div className="home-topBar">
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ fontSize: 32 }}>🦊</span>
               <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: -0.5, background: "linear-gradient(135deg, #a78bfa, #f9a8d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
@@ -183,7 +176,7 @@ export default async function HomePage() {
               </span>
             </div>
 
-            <div style={{ display: "flex", gap: 12 }}>
+            <div className="home-topActions">
               {email ? (
                 <>
                   <Link
@@ -258,7 +251,7 @@ export default async function HomePage() {
           </div>
 
           {/* Заголовок и поиск */}
-          <div style={{ maxWidth: 720, marginBottom: 40 }}>
+          <div className="home-copy">
             <h1 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 800, lineHeight: 1.1, letterSpacing: -0.03, margin: "0 0 20px 0", background: "linear-gradient(135deg, #fff, #cbd5e1)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Читай мангу, сохраняй прогресс, делись с друзьями
             </h1>
@@ -266,44 +259,11 @@ export default async function HomePage() {
               Тысячи тайтлов, персональные списки, оценки и друзья — всё в одном месте.
             </p>
 
-            {/* Поиск (статичная форма) */}
-            <form action="/catalog" method="GET" style={{ display: "flex", gap: 12 }}>
-              <input
-                name="q"
-                placeholder="Поиск по названию или автору..."
-                style={{
-                  flex: 1,
-                  padding: "14px 20px",
-                  borderRadius: 60,
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  background: "rgba(0,0,0,0.3)",
-                  backdropFilter: "blur(8px)",
-                  color: "white",
-                  fontSize: 16,
-                  outline: "none",
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  padding: "14px 32px",
-                  borderRadius: 60,
-                  border: "none",
-                  background: "linear-gradient(135deg, #8b5cf6, #ec4899)",
-                  color: "white",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: "pointer",
-                  boxShadow: "0 4px 20px rgba(236, 72, 153, 0.3)",
-                }}
-              >
-                Найти
-              </button>
-            </form>
+            <TitleSearch />
           </div>
 
           {/* Быстрые фичи (карточки) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+          <div className="home-featureGrid">
             {[
               { icon: "📌", label: "Списки чтения", desc: "Читаю, в планах, прочитано" },
               { icon: "⏩", label: "Прогресс", desc: "Автосохранение страницы" },
@@ -334,7 +294,7 @@ export default async function HomePage() {
       </div>
 
       {/* Основной контент */}
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 60px", display: "grid", gap: 24 }}>
+      <main className="home-main">
         {/* Continue reading */}
         {email && (
           <Section
@@ -350,25 +310,7 @@ export default async function HomePage() {
                 Вы ещё ничего не читали. Перейдите в каталог и начните читать!
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-                {continueItems.map((it) => {
-                  const currentPage = it.page ?? 1;
-                  const total = it.totalPages ?? 0;
-                  const progressPercent = total > 0 ? pct(currentPage, total) : 0;
-
-                  return (
-                    <CardLink
-                      key={`${it.comicId}-${it.chapterId}`}
-                      href={`/comics/${it.comicId}/chapters/${it.chapterId}?page=${currentPage}`}
-                      title={it.comicTitle}
-                      subtitle={`${it.authorName ?? "Автор неизвестен"} • Глава ${it.chapterNumber} • стр ${currentPage}/${total}`}
-                      coverUrl={it.coverUrl}
-                      badges={<Badge icon="⏳">{progressPercent}%</Badge>}
-                      progress={progressPercent}
-                    />
-                  );
-                })}
-              </div>
+              <ContinueSwiper items={continueItems} />
             )}
           </Section>
         )}
@@ -383,11 +325,11 @@ export default async function HomePage() {
               </Link>
             }
           >
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", justifyContent: "space-between" }}>
+            <div className="home-welcome">
               <div style={{ color: "rgba(255,255,255,0.7)" }}>
                 Войдите, чтобы сохранять прогресс и списки. Гостям тоже доступен весь каталог.
               </div>
-              <div style={{ display: "flex", gap: 12 }}>
+              <div className="home-topActions">
                 <Link
                   href="/auth/login"
                   style={{
@@ -419,7 +361,7 @@ export default async function HomePage() {
         )}
 
         {/* Тренды и новинки в две колонки */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div className="home-split">
           <Section
             title="В тренде"
             action={
@@ -485,16 +427,11 @@ export default async function HomePage() {
 
         {/* Подвал с подсказкой */}
         <div
+          className="home-tip"
           style={{
             background: "linear-gradient(135deg, rgba(139,92,246,0.1), rgba(236,72,153,0.1))",
             border: "1px solid rgba(255,255,255,0.06)",
             borderRadius: 32,
-            padding: "24px 32px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 20,
           }}
         >
           <div>

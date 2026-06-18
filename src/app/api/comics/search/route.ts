@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "../../../../server/db";
-import { comics, covers } from "../../../../server/db/schema";
+import { comics } from "../../../../server/db/schema";
 import { ilike, sql } from "drizzle-orm";
 
 export async function GET(req: Request) {

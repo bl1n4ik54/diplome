@@ -6,6 +6,15 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 import { db } from "../../../../server/db";
 import { users, friendRequests, userComicLists, comics } from "../../../../server/db/schema";
 
+type UserListItem = {
+  id: number;
+  status: string;
+  progress: number;
+  comicId: number;
+  title: string;
+  coverUrl: string | null;
+};
+
 // helper: id текущего пользователя или null
 async function getMeId() {
   const session = await getServerSession(authOptions);
@@ -82,7 +91,7 @@ export async function GET(
 
   // --- списки доступны только друзьям или самому себе
   const canSeeLists = friendship.state === "friends" || friendship.state === "self";
-  let lists: any[] | null = null;
+  let lists: UserListItem[] | null = null;
 
   if (canSeeLists) {
     const rows = await db

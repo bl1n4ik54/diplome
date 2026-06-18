@@ -13,7 +13,7 @@
 
 .contentGrid {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(min(260px, 100%), 1fr);
   gap: 14px;
   align-items: start;
 }
@@ -185,5 +185,17 @@
 @media (max-width: 700px) {
   .formGrid {
     grid-template-columns: 1fr;
+  }
+
+  .actions,
+  .gateActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .submitBtn,
+  .actions a,
+  .gateActions a {
+    width: 100%;
   }
 }

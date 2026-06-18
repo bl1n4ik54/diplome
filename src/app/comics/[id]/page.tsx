@@ -12,12 +12,20 @@ import {
   comicGenres,
   genres,
   favorites,
+  ratings,
   readingProgress,
+  userComicLists,
 } from "../../../server/db/schema";
 
 import FavoriteButton from "./FavoriteButton";
+import RatingModal from "./RatingModal";
 import MangaActions from "./MangaActions";
 import GenresChips from "./GenresChips";
+
+function formatRating(avg: number | null, count: number) {
+  if (!avg || count <= 0) return "—";
+  return `${avg.toFixed(1)} (${count})`;
+}
 
 export default async function ComicPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -36,7 +44,8 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
       description: comics.description,
       status: comics.status,
       releaseYear: comics.releaseYear,
-      rating: comics.rating,
+      ratingAvg: sql<number | null>`(select avg(r.value)::float from ratings r where r.comic_id = ${comics.id})`,
+      ratingCount: sql<number>`(select count(*)::int from ratings r where r.comic_id = ${comics.id})`,
       coverUrl: sql<string | null>`
         coalesce(
           (select image_url from covers c
@@ -77,6 +86,8 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
 
   // favorite initial
   let initialFav = false;
+  let initialListStatus: "reading" | "planned" | "completed" | "on_hold" | "dropped" | null = null;
+  let initialMyRating: number | null = null;
 
   // continue reading link
   let continueHref: string | null = null;
@@ -94,6 +105,31 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
         .limit(1);
 
       initialFav = favRow.length > 0;
+
+      const listRow = await db
+        .select({ status: userComicLists.status })
+        .from(userComicLists)
+        .where(and(eq(userComicLists.userId, me.id), eq(userComicLists.comicId, comicId)))
+        .limit(1);
+
+      const listStatus = listRow[0]?.status;
+      if (
+        listStatus === "reading" ||
+        listStatus === "planned" ||
+        listStatus === "completed" ||
+        listStatus === "on_hold" ||
+        listStatus === "dropped"
+      ) {
+        initialListStatus = listStatus;
+      }
+
+      const ratingRow = await db
+        .select({ value: ratings.value })
+        .from(ratings)
+        .where(and(eq(ratings.userId, me.id), eq(ratings.comicId, comicId)))
+        .limit(1);
+
+      initialMyRating = ratingRow[0]?.value ?? null;
 
       const prog = await db
         .select({
@@ -119,12 +155,12 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
     <div className="mw-page">
       <section className="mw-hero">
         <div className="mw-container">
-          <div className="mw-heroTop" style={{ alignItems: "stretch" }}>
+          <div className="mw-heroTop mw-comicHero">
             {/* LEFT */}
-            <div style={{ display: "grid", gap: 12, maxWidth: 920 }}>
+            <div className="mw-comicInfo">
               <div className="mw-pill">📘 Тайтл</div>
 
-              <h1 className="mw-h1" style={{ fontSize: 40 }}>
+              <h1 className="mw-h1">
                 {c.title}
               </h1>
 
@@ -135,22 +171,22 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
               </div>
 
               {gRows.length > 0 ? (
-                <div style={{ marginTop: 6 }}>
+                <div className="mw-comicGenres">
                   <GenresChips genres={gRows.map((x) => x.name)} />
                 </div>
               ) : (
-                <div className="mw-muted2" style={{ marginTop: 6 }}>
+                <div className="mw-muted2 mw-comicGenres">
                   Жанры не указаны
                 </div>
               )}
 
-              <div className="mw-row" style={{ marginTop: 4 }}>
-                <span className="mw-badge">★ {typeof c.rating === "number" ? c.rating.toFixed(1) : "—"}</span>
+              <div className="mw-row mw-comicStats">
+                <span className="mw-badge">★ {formatRating(c.ratingAvg, c.ratingCount ?? 0)}</span>
                 <span className="mw-badge">Глав: {chaptersRows.length}</span>
                 {isAdmin ? <span className="mw-badge">admin</span> : null}
               </div>
 
-              <div className="mw-actions" style={{ marginTop: 10 }}>
+              <div className="mw-actions mw-comicActions">
                 {continueHref ? (
                   <Link className="mw-btn mw-btnPrimary" href={continueHref}>
                     ⏩ Продолжить чтение
@@ -167,6 +203,14 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
                   ← В каталог
                 </Link>
 
+                <RatingModal
+                  comicId={comicId}
+                  isAuthed={Boolean(email)}
+                  initialRatingAvg={c.ratingAvg}
+                  initialRatingCount={c.ratingCount ?? 0}
+                  initialMyRating={initialMyRating}
+                />
+
                 {isAdmin ? (
                   <Link className="mw-btn" href={`/admin/comics/${comicId}/add-chapter`}>
                     🛠️ Редактировать (admin)
@@ -174,7 +218,7 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
                 ) : null}
               </div>
 
-              <div className="mw-cardFlat" style={{ marginTop: 10 }}>
+              <div className="mw-cardFlat mw-comicDescription">
                 <div className="mw-muted" style={{ fontWeight: 950, letterSpacing: 1.2 }}>
                   ОПИСАНИЕ
                 </div>
@@ -186,12 +230,9 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
 
             {/* RIGHT POSTER */}
             <div
-              className="mw-card"
+              className="mw-card mw-comicPoster"
               style={{
-                width: 340,
-                maxWidth: "100%",
                 height: "fit-content",
-                padding: 14,
               }}
             >
               <div
@@ -216,6 +257,16 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
               </div>
 
               <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                {readHref ? (
+                  <Link className="mw-btn mw-btnPrimary mw-readCoverBtn" href={readHref}>
+                    {continueHref ? "⏩ Читать дальше" : "▶ Начать читать"}
+                  </Link>
+                ) : (
+                  <span className="mw-btn mw-btnDisabled mw-readCoverBtn" aria-disabled="true">
+                    Пока нет глав
+                  </span>
+                )}
+
                 {email ? (
                   <FavoriteButton comicId={comicId} initial={initialFav} />
                 ) : (
@@ -224,7 +275,7 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
                   </Link>
                 )}
 
-                <MangaActions comicId={comicId} isAuthed={Boolean(email)} readHref={readHref} />
+                <MangaActions comicId={comicId} isAuthed={Boolean(email)} initialStatus={initialListStatus} />
               </div>
             </div>
           </div>
@@ -264,9 +315,9 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
                   className="mw-cardLink"
                   style={{ padding: 12 }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 950, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div className="mw-chapterRow">
+                    <div className="mw-chapterInfo">
+                      <div className="mw-chapterName">
                         Глава {ch.chapterNumber}
                         {ch.title ? ` — ${ch.title}` : ""}
                       </div>

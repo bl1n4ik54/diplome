@@ -13,9 +13,10 @@
 }
 
 .admin-wrap {
-  max-width: 1200px;
+  width: min(100%, 1200px);
   margin: 0 auto;
   padding: clamp(16px, 3vw, 28px);
+  overflow-x: hidden;
 }
 
 /* Верхняя панель */
@@ -85,7 +86,7 @@
   margin-top: 14px;
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
 }
 
 /* KPI */
@@ -113,6 +114,7 @@
 /* Таблица */
 .table {
   width: 100%;
+  max-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   margin-top: 12px;
@@ -214,6 +216,7 @@
   background: rgba(0, 0, 0, 0.18);
   color: inherit;
   width: min(420px, 100%);
+  min-width: 0;
   transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
 }
 
@@ -234,10 +237,11 @@
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
+  min-width: 0;
 }
 
 /* Мобильная адаптация */
-@media (max-width: 720px) {
+@media (max-width: 820px) {
   .admin-top {
     flex-direction: column;
     align-items: flex-start;
@@ -245,6 +249,11 @@
 
   .admin-nav {
     width: 100%;
+  }
+
+  .admin-link,
+  .btn {
+    justify-content: center;
   }
 
   /* Таблица станет горизонтально скроллимой */
@@ -257,5 +266,28 @@
   .table thead th,
   .table td {
     white-space: nowrap;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-wrap {
+    padding-inline: 12px;
+  }
+
+  .admin-card {
+    padding: 14px;
+  }
+
+  .admin-nav,
+  .row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-link,
+  .btn,
+  .input,
+  .row > * {
+    width: 100%;
   }
 }

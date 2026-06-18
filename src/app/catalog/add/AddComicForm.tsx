@@ -94,7 +94,7 @@ export default function AddComicForm() {
           <div className="mw-heroTop">
             <div className={styles.heroCopy}>
               <span className="mw-pill">Admin</span>
-              <h1 className="mw-h1" style={{ fontSize: 40 }}>
+              <h1 className="mw-h1">
                 Добавить мангу
               </h1>
               <p className="mw-subtitle">

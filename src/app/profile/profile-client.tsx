@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import "./profile.css";
@@ -48,6 +50,10 @@ type MeUser = {
   provider: string;
   createdAt: string | null;
 };
+type ProfileUser = {
+  name?: string | null;
+  email?: string | null;
+};
 
 function Icon({ name }: { name: "user" | "edit" | "search" | "lists" | "friends" }) {
   const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2 };
@@ -94,7 +100,7 @@ function Icon({ name }: { name: "user" | "edit" | "search" | "lists" | "friends"
   );
 }
 
-export default function ProfileClient({ user }: { user: any }) {
+export default function ProfileClient({ user }: { user: ProfileUser }) {
   const [error, setError] = useState("");
   const [okMsg, setOkMsg] = useState("");
 
@@ -133,6 +139,7 @@ export default function ProfileClient({ user }: { user: any }) {
     const b = parts[1]?.[0] ?? "";
     return (a + b).toUpperCase();
   }, [me?.username, user?.name]);
+  void initials;
 
   async function loadMe() {
     const res = await fetch("/api/profile/me");
@@ -194,9 +201,11 @@ export default function ProfileClient({ user }: { user: any }) {
   }
 
   useEffect(() => {
-    loadMe();
-    loadLists();
-    loadFriends();
+    void Promise.resolve().then(() => {
+      void loadMe();
+      void loadLists();
+      void loadFriends();
+    });
   }, []);
 
   async function searchComics() {
@@ -285,7 +294,7 @@ export default function ProfileClient({ user }: { user: any }) {
                 </span>
               </div>
 
-              <h1 className="mw-h1" style={{ fontSize: 40 }}>
+              <h1 className="mw-h1">
                 {me?.username?.trim() ? me.username : user?.name || "Пользователь"}
               </h1>
 

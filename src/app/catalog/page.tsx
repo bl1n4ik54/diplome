@@ -15,7 +15,7 @@ export default async function CatalogPage({
   const q = (sp?.q ?? "").trim().toLowerCase();
 
   const session = await getServerSession(authOptions);
-  const role = (session?.user as any)?.role ?? "user";
+  const role = session?.user?.role ?? "user";
   const isAdmin = role === "admin";
 
   const whereSql =
@@ -53,7 +53,7 @@ export default async function CatalogPage({
           <div className="mw-heroTop">
             <div style={{ display: "grid", gap: 10 }}>
               <div className="mw-pill">📚 Каталог</div>
-              <h1 className="mw-h1" style={{ fontSize: 40 }}>
+              <h1 className="mw-h1">
                 Каталог MangaWorld
               </h1>
               <div className="mw-subtitle">
@@ -75,7 +75,7 @@ export default async function CatalogPage({
 
           <div className="mw-cardFlat" style={{ marginTop: 16 }}>
             <form action="/catalog" method="GET" className="mw-row">
-              <div style={{ flex: 1, minWidth: 240 }}>
+              <div style={{ flex: 1, minWidth: "min(240px, 100%)" }}>
                 <div className="mw-muted" style={{ fontWeight: 950, letterSpacing: 1.2 }}>
                   ПОИСК
                 </div>
@@ -131,7 +131,7 @@ export default async function CatalogPage({
             <div className="mw-subtitle">Попробуй изменить запрос или сбросить фильтр.</div>
           </div>
         ) : (
-          <div className="mw-gridCards" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
+          <div className="mw-gridCompact">
             {items.map((it) => (
               <Link
                 key={it.id}

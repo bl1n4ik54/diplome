@@ -9,8 +9,9 @@ import { users, userComicLists } from "../../../../../server/db/schema";
 
 type Status = "reading" | "planned" | "completed" | "on_hold" | "dropped";
 const STATUSES: Status[] = ["reading", "planned", "completed", "on_hold", "dropped"];
+type ListPatch = { updatedAt: Date; status?: Status; progress?: number };
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email ?? null;
   if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,13 +19,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const me = await db.query.users.findFirst({ where: eq(users.email, email) });
   if (!me) return NextResponse.json({ error: "User not found" }, { status: 401 });
 
-  const id = Number(params.id);
+  const { id: rawId } = await params;
+  const id = Number(rawId);
   if (!id || Number.isNaN(id)) return NextResponse.json({ error: "Некорректный id" }, { status: 400 });
 
   const body = (await req.json().catch(() => null)) as Partial<{ status: Status; progress: number }> | null;
   if (!body) return NextResponse.json({ error: "Невалидный JSON" }, { status: 400 });
 
-  const patch: any = { updatedAt: new Date() };
+  const patch: ListPatch = { updatedAt: new Date() };
 
   if (body.status) {
     if (!STATUSES.includes(body.status)) return NextResponse.json({ error: "Некорректный status" }, { status: 400 });
@@ -50,7 +52,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json({ item: updated });
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email ?? null;
   if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -58,7 +60,8 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   const me = await db.query.users.findFirst({ where: eq(users.email, email) });
   if (!me) return NextResponse.json({ error: "User not found" }, { status: 401 });
 
-  const id = Number(params.id);
+  const { id: rawId } = await params;
+  const id = Number(rawId);
   if (!id || Number.isNaN(id)) return NextResponse.json({ error: "Некорректный id" }, { status: 400 });
 
   const deleted = await db

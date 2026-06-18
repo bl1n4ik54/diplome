@@ -1,7 +1,7 @@
 // API: списки пользователя (получить список / добавить или обновить статус)
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { db } from "../../../../server/db";

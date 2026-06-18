@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
   const [updated] = await db
     .update(users)
-    .set({ username: username as any })
+    .set({ username })
     .where(eq(users.id, me.id))
     .returning({
       id: users.id,

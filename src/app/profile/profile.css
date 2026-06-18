@@ -45,7 +45,7 @@
   margin-top: 12px;
   display:grid;
   gap:12px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
 }
 
 /* KPI */
@@ -81,7 +81,7 @@
   overflow-x: hidden;
 }
 @media (max-width: 1200px){
-  .mwProfileGrid5{ grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .mwProfileGrid5{ grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); }
 }
 
 /* status columns */
@@ -133,7 +133,7 @@
   margin-top: 12px;
   display:grid;
   gap:12px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
 }
 .mwFriendsList{ margin-top: 10px; display:grid; gap:10px; }
 .mwFriendRow{
@@ -150,5 +150,17 @@
 .mwFriendLink{
   text-decoration:none;
   color:inherit;
-  min-width: 200px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 560px){
+  .mwProfileKpis{
+    grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  }
+
+  .mwFriendRow,
+  .mwProfileResultRow{
+    align-items: stretch;
+  }
 }

@@ -12,7 +12,7 @@ export default function GenresChips({ genres }: { genres: string[] }) {
   if (genres.length === 0) return null;
 
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+    <div className="mw-genreChips">
       {shown.map((g) => (
         <span key={g} className="mw-badge">
           {g}
@@ -20,13 +20,13 @@ export default function GenresChips({ genres }: { genres: string[] }) {
       ))}
 
       {!open && rest > 0 ? (
-        <button type="button" className="mw-btn" onClick={() => setOpen(true)}>
+        <button type="button" className="mw-badge mw-chipButton" onClick={() => setOpen(true)}>
           + ещё ({rest})
         </button>
       ) : null}
 
       {open && rest > 0 ? (
-        <button type="button" className="mw-btn" onClick={() => setOpen(false)}>
+        <button type="button" className="mw-badge mw-chipButton" onClick={() => setOpen(false)}>
           свернуть
         </button>
       ) : null}

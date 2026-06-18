@@ -71,7 +71,7 @@ export default function AddChapterForm({
       )}
 
       <div className="row">
-        <div style={{ minWidth: 180 }}>
+        <div style={{ minWidth: "min(180px, 100%)" }}>
           <div style={{ opacity: 0.8, fontSize: 12, marginBottom: 6 }}>Номер главы</div>
           <input
             className="input"
@@ -82,7 +82,7 @@ export default function AddChapterForm({
           />
         </div>
 
-        <div style={{ flex: 1, minWidth: 260 }}>
+        <div style={{ flex: 1, minWidth: "min(260px, 100%)" }}>
           <div style={{ opacity: 0.8, fontSize: 12, marginBottom: 6 }}>Название (опционально)</div>
           <input
             className="input"

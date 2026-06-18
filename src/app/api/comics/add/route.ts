@@ -36,9 +36,8 @@ export async function POST(req: Request) {
   const releaseYear = body.releaseYear ?? null;
   const status = body.status ?? "ongoing";
 
-  const normalizedGenres = Array.from(
-    new Set((body.genreNames ?? []).map((g) => String(g).trim()).filter(Boolean))
-  );
+  const rawGenreNames = Array.isArray(body.genreNames) ? body.genreNames : [];
+  const normalizedGenres = Array.from(new Set(rawGenreNames.map((g) => String(g).trim()).filter(Boolean)));
 
   if (!title || !authorName || normalizedGenres.length === 0) {
     return NextResponse.json(
@@ -50,23 +49,24 @@ export async function POST(req: Request) {
   try {
     const comicId = await db.transaction(async (tx) => {
       // author find/create
-      let author = await tx.query.authors.findFirst({ where: eq(authors.name, authorName) });
+      const existingAuthor = await tx.query.authors.findFirst({ where: eq(authors.name, authorName) });
+      let authorId = existingAuthor?.id;
 
-      if (!author) {
+      if (!authorId) {
         const [createdAuthor] = await tx
           .insert(authors)
           .values({ name: authorName, country: null })
           .returning({ id: authors.id });
-        author = createdAuthor as any;
+        authorId = createdAuthor?.id;
       }
-      if (!author) throw new Error("AUTHOR_CREATE_FAILED");
+      if (!authorId) throw new Error("AUTHOR_CREATE_FAILED");
 
       const [createdComic] = await tx
         .insert(comics)
         .values({
           title,
           description,
-          authorId: author.id,
+          authorId,
           releaseYear,
           status,
         })
@@ -83,20 +83,21 @@ export async function POST(req: Request) {
       }
 
       for (const gName of normalizedGenres) {
-        let genre = await tx.query.genres.findFirst({ where: eq(genres.name, gName) });
+        const existingGenre = await tx.query.genres.findFirst({ where: eq(genres.name, gName) });
+        let genreId = existingGenre?.id;
 
-        if (!genre) {
+        if (!genreId) {
           const [createdGenre] = await tx
             .insert(genres)
             .values({ name: gName })
             .returning({ id: genres.id });
-          genre = createdGenre as any;
+          genreId = createdGenre?.id;
         }
 
-        if (genre) {
+        if (genreId) {
           await tx.insert(comicGenres).values({
             comicId: createdComic.id,
-            genreId: genre.id,
+            genreId,
           });
         }
       }

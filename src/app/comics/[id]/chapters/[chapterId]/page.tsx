@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { eq, asc, sql } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 
 import { db } from "../../../../../server/db";
 import { comics, authors, chapters } from "../../../../../server/db/schema";

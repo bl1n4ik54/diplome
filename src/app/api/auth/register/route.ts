@@ -6,7 +6,10 @@ import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
   try {
-    const { username, email, password } = await req.json();
+    const body = (await req.json()) as Partial<Record<"username" | "email" | "password", unknown>>;
+    const username = typeof body.username === "string" ? body.username.trim() : "";
+    const email = typeof body.email === "string" ? body.email.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
 
     if (!email || !password || !username) {
       return NextResponse.json({ error: "Заполните все поля" }, { status: 400 });
@@ -30,7 +33,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Ошибка регистрации:", err);
     return NextResponse.json({ error: "Внутренняя ошибка сервера" }, { status: 500 });
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type ChapterItem = { id: number; chapterNumber: number };
@@ -34,25 +34,16 @@ export default function ReaderClient({
   const router = useRouter();
 
   const [cur, setCur] = useState(page);
-  const [openChapters, setOpenChapters] = useState(false);
-  const wrapRef = useRef<HTMLDivElement | null>(null);
 
   // sync with url changes
   useEffect(() => {
     setCur(page);
   }, [page]);
 
-  // close dropdown on outside click
-  useEffect(() => {
-    function onDown(e: MouseEvent) {
-      if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(e.target as Node)) setOpenChapters(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, []);
-
   const imgUrl = pages[Math.max(0, cur - 1)] ?? null;
+  const canGoPrev = Boolean(prevChapterHref) || cur > 1;
+  const canGoNext = Boolean(nextChapterHref) || cur < total;
+  const pageOptions = Array.from({ length: total }, (_, index) => index + 1);
 
   const hrefForPage = (p: number) => `/comics/${comicId}/chapters/${chapterId}?page=${p}`;
 
@@ -70,6 +61,12 @@ export default function ReaderClient({
     setCur(nextP);
     await saveProgress(nextP);
     router.push(hrefForPage(nextP));
+  }
+
+  async function goToChapter(nextChapterId: number) {
+    if (nextChapterId === chapterId) return;
+    await saveProgress(cur);
+    router.push(`/comics/${comicId}/chapters/${nextChapterId}?page=1`);
   }
 
   async function next() {
@@ -98,7 +95,6 @@ export default function ReaderClient({
     function onKey(e: KeyboardEvent) {
       if (e.key === "ArrowRight") next();
       if (e.key === "ArrowLeft") prev();
-      if (e.key === "Escape") setOpenChapters(false);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -112,7 +108,7 @@ export default function ReaderClient({
           <div className="mw-heroTop">
             <div style={{ display: "grid", gap: 8 }}>
               <div className="mw-pill">📖 Читалка</div>
-              <h1 className="mw-h1" style={{ fontSize: 34 }}>
+              <h1 className="mw-h1">
                 {comicTitle}
               </h1>
               <div className="mw-subtitle">
@@ -132,70 +128,67 @@ export default function ReaderClient({
 
           {/* top bar */}
           <div className="mw-cardFlat" style={{ marginTop: 12 }}>
-            <div className="mw-row" style={{ justifyContent: "space-between" }} ref={wrapRef}>
+            <div className="mw-row" style={{ justifyContent: "space-between" }}>
               <div className="mw-row">
-                <button className="mw-btn" onClick={prev} disabled={!prevChapterHref && cur === 1}>
+                <button className="mw-btn" onClick={prev} disabled={!canGoPrev}>
                   ←
                 </button>
-                <button className="mw-btn mw-btnPrimary" onClick={next} disabled={!nextChapterHref && cur === total}>
+                <button className="mw-btn mw-btnPrimary" onClick={next} disabled={!canGoNext}>
                   →
                 </button>
               </div>
 
-              {/* page counter (opens chapter dropdown) */}
-              <button
-                className="mw-btn"
-                onClick={() => setOpenChapters((v) => !v)}
-                style={{ position: "relative" }}
-                type="button"
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: 10,
+                  width: "min(340px, 100%)",
+                  marginLeft: "auto",
+                }}
               >
-                Стр. {cur}/{total} • Глава {chapterNumber} ▾
-              </button>
-
-              {openChapters ? (
-                <div
+                <select
+                  aria-label="Выбор страницы"
+                  className="mw-btn"
+                  value={cur}
+                  onChange={(e) => void go(Number(e.target.value))}
                   style={{
-                    position: "absolute",
-                    top: "calc(100% + 10px)",
-                    right: 14,
-                    width: 320,
-                    maxHeight: 320,
-                    overflow: "auto",
-                    background: "#0A0A0F",
-                    border: "1px solid rgba(255,255,255,0.14)",
-                    borderRadius: 16,
-                    padding: 10,
-                    boxShadow: "0 18px 60px rgba(0,0,0,0.55)",
-                    zIndex: 50,
+                    width: "100%",
+                    minWidth: 0,
+                    textAlign: "left",
+                    display: "block",
+                    backgroundColor: "rgba(255,255,255,0.06)",
+                    colorScheme: "dark",
                   }}
                 >
-                  <div className="mw-muted" style={{ fontWeight: 950, letterSpacing: 1.2, marginBottom: 8 }}>
-                    ВЫБОР ГЛАВЫ
-                  </div>
+                  {pageOptions.map((p) => (
+                    <option key={p} value={p}>
+                      Стр. {p} из {total}
+                    </option>
+                  ))}
+                </select>
 
-                  <div style={{ display: "grid", gap: 8 }}>
-                    {chapters.map((ch) => (
-                      <Link
-                        key={ch.id}
-                        href={`/comics/${comicId}/chapters/${ch.id}?page=1`}
-                        className="mw-cardLink"
-                        style={{
-                          padding: 10,
-                          borderRadius: 14,
-                          background: ch.id === chapterId ? "rgba(236,72,153,0.12)" : "rgba(255,255,255,0.02)",
-                        }}
-                        onClick={() => setOpenChapters(false)}
-                      >
-                        Глава {ch.chapterNumber}
-                      </Link>
-                    ))}
-                  </div>
-
-                  <button className="mw-btn" style={{ marginTop: 10, width: "100%" }} onClick={() => setOpenChapters(false)}>
-                    Закрыть
-                  </button>
-                </div>
-              ) : null}
+                <select
+                  aria-label="Выбор главы"
+                  className="mw-btn"
+                  value={chapterId}
+                  onChange={(e) => void goToChapter(Number(e.target.value))}
+                  style={{
+                    width: "100%",
+                    minWidth: 0,
+                    textAlign: "left",
+                    display: "block",
+                    backgroundColor: "rgba(255,255,255,0.06)",
+                    colorScheme: "dark",
+                  }}
+                >
+                  {chapters.map((ch) => (
+                    <option key={ch.id} value={ch.id}>
+                      Глава {ch.chapterNumber}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -203,20 +196,59 @@ export default function ReaderClient({
 
       <main className="mw-container mw-main" style={{ gap: 14 }}>
         <div className="mw-cardFlat" style={{ padding: 14 }}>
-          <div style={{ display: "grid", placeItems: "center" }}>
+          <div style={{ display: "grid", placeItems: "center", position: "relative" }}>
             {imgUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={imgUrl}
-                alt={`page ${cur}`}
-                style={{
-                  width: "min(900px, 100%)",
-                  height: "auto",
-                  borderRadius: 18,
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  background: "rgba(255,255,255,0.02)",
-                }}
-              />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imgUrl}
+                  alt={`page ${cur}`}
+                  style={{
+                    width: "min(900px, 100%)",
+                    height: "auto",
+                    borderRadius: 18,
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.02)",
+                    display: "block",
+                  }}
+                />
+                <button
+                  type="button"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  onClick={prev}
+                  disabled={!canGoPrev}
+                  style={{
+                    position: "absolute",
+                    inset: "0 auto 0 0",
+                    width: "50%",
+                    border: 0,
+                    padding: 0,
+                    background: "transparent",
+                    cursor: canGoPrev ? "w-resize" : "default",
+                    opacity: 0,
+                    touchAction: "manipulation",
+                  }}
+                />
+                <button
+                  type="button"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  onClick={next}
+                  disabled={!canGoNext}
+                  style={{
+                    position: "absolute",
+                    inset: "0 0 0 auto",
+                    width: "50%",
+                    border: 0,
+                    padding: 0,
+                    background: "transparent",
+                    cursor: canGoNext ? "e-resize" : "default",
+                    opacity: 0,
+                    touchAction: "manipulation",
+                  }}
+                />
+              </>
             ) : (
               <div className="mw-muted2">Нет страницы</div>
             )}

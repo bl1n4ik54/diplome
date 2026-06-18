@@ -21,10 +21,11 @@ async function isAdmin() {
   return session.user.role === "admin";
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const comicId = Number(params.id);
+  const { id } = await params;
+  const comicId = Number(id);
   if (!comicId) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
   await db.transaction(async (tx) => {

@@ -22,12 +22,32 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  min-width: 0;
 }
 
 /* Общие стили для контейнеров */
@@ -146,6 +166,11 @@ input:focus {
 
 input::placeholder {
   color: var(--text-muted);
+}
+
+textarea,
+select {
+  width: 100%;
 }
 
 /* Карточки */

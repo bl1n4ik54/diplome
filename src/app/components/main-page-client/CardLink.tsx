@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Badge } from './Badge';
 
 export function CardLink({
   href,
@@ -38,6 +37,7 @@ export function CardLink({
         color: 'inherit',
         transition: 'all 0.2s ease',
         cursor: 'pointer',
+        minWidth: 0,
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
@@ -79,7 +79,7 @@ export function CardLink({
 
       {/* Контент */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', minWidth: 0 }}>
           <div style={{ minWidth: 0 }}>
             <div
               style={{
@@ -109,7 +109,7 @@ export function CardLink({
               </div>
             )}
           </div>
-          {badges && <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>{badges}</div>}
+          {badges && <div style={{ display: 'flex', gap: '6px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>{badges}</div>}
         </div>
 
         {/* Прогресс-бар */}

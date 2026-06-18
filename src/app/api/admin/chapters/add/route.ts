@@ -6,6 +6,13 @@ import { db } from "../../../../../server/db";
 import { chapters, chapterPages } from "../../../../../server/db/schema";
 import { and, eq } from "drizzle-orm";
 
+type AddChapterBody = {
+  comicId?: unknown;
+  chapterNumber?: unknown;
+  title?: unknown;
+  pages?: unknown;
+};
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
@@ -16,16 +23,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = (await req.json().catch(() => null)) as AddChapterBody | null;
 
   const comicId = Number(body?.comicId);
   const chapterNumber = Number(body?.chapterNumber);
   const title = body?.title ? String(body.title) : null;
 
-  const pagesRaw = Array.isArray(body?.pages) ? body.pages : [];
+  const pagesRaw: unknown[] = Array.isArray(body?.pages) ? body.pages : [];
   const pages: string[] = pagesRaw
-    .filter((x: any) => typeof x === "string")
-    .map((x: string) => x.trim())
+    .filter((x): x is string => typeof x === "string")
+    .map((x) => x.trim())
     .filter(Boolean);
 
   if (!comicId || !chapterNumber) {
@@ -67,7 +74,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ ok: true, chapterId });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Server error" }, { status: 500 });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

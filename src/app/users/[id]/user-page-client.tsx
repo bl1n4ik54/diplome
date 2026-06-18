@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
@@ -111,7 +113,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
           <div className="mw-heroTop">
             <div style={{ display: "grid", gap: 10 }}>
               <div className="mw-pill">👤 Пользователь</div>
-              <h1 className="mw-h1" style={{ fontSize: 40 }}>
+              <h1 className="mw-h1">
                 {loading ? "Загрузка..." : user ? user.username : "Пользователь"}
               </h1>
               <div className="mw-subtitle">Страница пользователя и его списков (если есть доступ).</div>
@@ -126,7 +128,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
               </div>
             </div>
 
-            <div className="mw-card" style={{ width: 360, maxWidth: "100%" }}>
+            <div className="mw-card" style={{ width: "min(360px, 100%)" }}>
               <div className="mw-muted" style={{ fontWeight: 950, letterSpacing: 1.2 }}>
                 ДРУЖБА
               </div>
@@ -213,7 +215,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
           ) : null}
 
           {canSeeLists ? (
-            <div className="mw-gridCards" style={{ marginTop: 14, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+            <div className="mw-gridCards" style={{ marginTop: 14 }}>
               {(Object.keys(grouped) as Status[]).map((st) => (
                 <div key={st} className="mw-cardFlat">
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
