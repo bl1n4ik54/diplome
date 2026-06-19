@@ -5,6 +5,9 @@ import { eq, sql } from "drizzle-orm";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 import { db } from "../../server/db";
 import { comics, authors } from "../../server/db/schema";
+import CatalogGrid from "./CatalogGrid";
+
+const CATALOG_PAGE_SIZE = 24;
 
 export default async function CatalogPage({
   searchParams,
@@ -23,28 +26,40 @@ export default async function CatalogPage({
       ? sql`(lower(${comics.title}) like ${"%" + q + "%"} or lower(${authors.name}) like ${"%" + q + "%"})`
       : sql`true`;
 
-  const items = await db
-    .select({
-      id: comics.id,
-      title: comics.title,
-      status: comics.status,
-      releaseYear: comics.releaseYear,
-      rating: comics.rating,
-      authorName: authors.name,
-      coverUrl: sql<string | null>`
-        coalesce(
-          (select image_url from covers c
-            where c.comic_id = ${comics.id}
-            order by c.is_main desc, c.id asc
-            limit 1),
-          ${comics.coverUrl}
-        )
-      `,
-    })
-    .from(comics)
-    .innerJoin(authors, eq(comics.authorId, authors.id))
-    .where(whereSql)
-    .orderBy(sql`${comics.createdAt} desc`);
+  const [itemRows, totalRows] = await Promise.all([
+    db
+      .select({
+        id: comics.id,
+        title: comics.title,
+        status: comics.status,
+        releaseYear: comics.releaseYear,
+        rating: comics.rating,
+        authorName: authors.name,
+        coverUrl: sql<string | null>`
+          coalesce(
+            (select image_url from covers c
+              where c.comic_id = ${comics.id}
+              order by c.is_main desc, c.id asc
+              limit 1),
+            ${comics.coverUrl}
+          )
+        `,
+      })
+      .from(comics)
+      .innerJoin(authors, eq(comics.authorId, authors.id))
+      .where(whereSql)
+      .orderBy(sql`${comics.createdAt} desc`, sql`${comics.id} desc`)
+      .limit(CATALOG_PAGE_SIZE + 1),
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(comics)
+      .innerJoin(authors, eq(comics.authorId, authors.id))
+      .where(whereSql),
+  ]);
+
+  const items = itemRows.slice(0, CATALOG_PAGE_SIZE);
+  const hasMore = itemRows.length > CATALOG_PAGE_SIZE;
+  const totalItems = Number(totalRows[0]?.total ?? items.length);
 
   return (
     <div className="mw-page">
@@ -114,71 +129,17 @@ export default async function CatalogPage({
               РЕЗУЛЬТАТЫ
             </div>
             <div className="mw-title" style={{ marginTop: 6 }}>
-              {q ? `Найдено: ${items.length}` : `Всего тайтлов: ${items.length}`}
+              {q ? `Найдено: ${totalItems}` : `Всего тайтлов: ${totalItems}`}
             </div>
           </div>
 
           <div className="mw-row">
             <span className="mw-badge">★ рейтинг</span>
-            <span className="mw-badge">❤ избранное</span>
             <span className="mw-badge">📖 главы</span>
           </div>
         </div>
 
-        {items.length === 0 ? (
-          <div className="mw-cardFlat">
-            <div className="mw-title">Ничего не найдено</div>
-            <div className="mw-subtitle">Попробуй изменить запрос или сбросить фильтр.</div>
-          </div>
-        ) : (
-          <div className="mw-gridCompact">
-            {items.map((it) => (
-              <Link
-                key={it.id}
-                href={`/comics/${it.id}`}
-                className="mw-cardLink"
-                style={{ padding: 12, borderRadius: 22 }}
-              >
-                <div
-                  style={{
-                    width: "100%",
-                    aspectRatio: "3 / 4",
-                    borderRadius: 18,
-                    overflow: "hidden",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    background: "rgba(255,255,255,0.02)",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                  aria-hidden
-                >
-                  {it.coverUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={it.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <span style={{ fontSize: 18, opacity: 0.85 }}>📘</span>
-                  )}
-                </div>
-
-                <div style={{ display: "grid", gap: 6 }}>
-                  <div style={{ fontWeight: 950, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {it.title}
-                  </div>
-
-                  <div className="mw-muted" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {it.authorName}
-                    {it.releaseYear ? ` • ${it.releaseYear}` : ""}
-                  </div>
-
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                    {it.status ? <span className="mw-badge">{it.status}</span> : null}
-                    <span className="mw-badge">★ {typeof it.rating === "number" ? it.rating.toFixed(1) : "—"}</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+        <CatalogGrid initialItems={items} initialHasMore={hasMore} query={q} />
       </main>
     </div>
   );

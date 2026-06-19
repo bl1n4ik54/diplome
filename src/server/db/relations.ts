@@ -7,7 +7,6 @@ import {
   genres,
   chapters,
   ratings,
-  favorites,
   comicGenres,
   covers,
   userComicLists,
@@ -21,7 +20,6 @@ import {
  */
 export const userRelations = relations(users, ({ many }) => ({
   ratings: many(ratings),
-  favorites: many(favorites),
   readingProgress: many(readingProgress),
   comicLists: many(userComicLists),
 
@@ -48,7 +46,6 @@ export const comicRelations = relations(comics, ({ many, one }) => ({
 
   chapters: many(chapters),
   ratings: many(ratings),
-  favorites: many(favorites),
 
   // M2M жанры через таблицу comicGenres
   genres: many(comicGenres),
@@ -124,20 +121,6 @@ export const ratingsRelations = relations(ratings, ({ one }) => ({
   }),
   comic: one(comics, {
     fields: [ratings.comicId],
-    references: [comics.id],
-  }),
-}));
-
-/**
- * FAVORITES
- */
-export const favoritesRelations = relations(favorites, ({ one }) => ({
-  user: one(users, {
-    fields: [favorites.userId],
-    references: [users.id],
-  }),
-  comic: one(comics, {
-    fields: [favorites.comicId],
     references: [comics.id],
   }),
 }));

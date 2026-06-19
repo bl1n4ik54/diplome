@@ -119,18 +119,6 @@ export const ratings = pgTable("ratings", {
   value: integer("value").notNull(), // 1–10
 });
 
-// FAVORITES
-export const favorites = pgTable("favorites", {
-  userId: integer("user_id")
-    .references(() => users.id)
-    .notNull(),
-  comicId: integer("comic_id")
-    .references(() => comics.id)
-    .notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-
 // USER COMIC LISTS
 export const userComicLists = pgTable(
   "user_comic_lists",

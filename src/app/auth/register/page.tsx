@@ -76,7 +76,7 @@ export default async function RegisterPage() {
             </h1>
 
             <div style={{ opacity: 0.78, lineHeight: 1.55, maxWidth: 520 }}>
-              Сохраняй прогресс чтения, собирай избранное, ставь оценки и находи друзей.
+              Сохраняй прогресс чтения, веди списки, ставь оценки и находи друзей.
             </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 6 }}>

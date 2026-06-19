@@ -22,7 +22,6 @@ type ComicCard = {
   coverUrl: string | null;
   ratingAvg: number | null;
   ratingCount: number;
-  favCount: number;
   releaseYear: number | null;
   status: string | null;
 };
@@ -401,7 +400,7 @@ export default function HomeClient({
   isAuthed: boolean;
   role: string;
   kpis: { comics: number; genres: number; users: number };
-  stats: { fav: number; list: number; friends: number } | null;
+  stats: { list: number; friends: number } | null;
   continueItems: ContinueItem[];
   trending: ComicCard[];
   newItems: ComicCard[];
@@ -614,7 +613,7 @@ export default function HomeClient({
                   </button>
                 </div>
                 <FeatureRow icon="📖" title="Прогресс чтения" text="Мы запоминаем главу и страницу — продолжай с того места, где остановился." />
-                <FeatureRow icon="⭐" title="Избранное и оценки" text="Ставь оценки, добавляй в любимое. Рейтинги формируются автоматически." />
+                <FeatureRow icon="⭐" title="Оценки" text="Ставь оценки тайтлам. Рейтинги формируются автоматически." />
                 <FeatureRow icon="👥" title="Друзья" text="Следи за активностью друзей и открывай их коллекции." />
               </GlassCard>
 
@@ -652,7 +651,7 @@ export default function HomeClient({
                   }}
                 >
                   <div style={{ fontSize: 13, opacity: 0.9 }}>
-                    ❤ {stats.fav} избр. · 📋 {stats.list} списков · 👥 {stats.friends} друзей
+                    📋 {stats.list} списков · 👥 {stats.friends} друзей
                   </div>
                   <Link href="/profile" style={{ color: "#D32F2F", fontWeight: 700, textDecoration: "none" }}>
                     Мой профиль →
@@ -714,10 +713,7 @@ export default function HomeClient({
                 title={c.title}
                 subtitle={`${c.authorName ?? "Автор"}${c.releaseYear ? ` • ${c.releaseYear}` : ""}${c.status ? ` • ${c.status}` : ""}`}
                 tags={
-                  <>
-                    <JapaneseBadge>★ {fmtRating(c.ratingAvg, c.ratingCount)}</JapaneseBadge>
-                    <JapaneseBadge>❤ {c.favCount}</JapaneseBadge>
-                  </>
+                  <JapaneseBadge>★ {fmtRating(c.ratingAvg, c.ratingCount)}</JapaneseBadge>
                 }
               />
             ))}
@@ -767,7 +763,7 @@ export default function HomeClient({
             <JapaneseBadge variant="red">манга ждёт</JapaneseBadge>
             <h3 style={{ fontSize: 32, fontWeight: 700, margin: "16px 0 8px" }}>Готов окунуться в мир манги?</h3>
             <p style={{ opacity: 0.8, fontSize: 16, lineHeight: 1.6 }}>
-              Открывай каталог, добавляй в избранное, читай и делись впечатлениями с друзьями.
+              Открывай каталог, читай и делись впечатлениями с друзьями.
             </p>
           </div>
           <div style={{ display: "flex", gap: 12 }}>

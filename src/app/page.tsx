@@ -32,7 +32,6 @@ type ComicCard = {
   coverUrl: string | null;
   ratingAvg: number | null;
   ratingCount: number;
-  favCount: number;
   releaseYear: number | null;
   status: string | null;
 };
@@ -89,7 +88,7 @@ export default async function HomePage() {
     }
   }
 
-  // --- Trending (по избранному)
+  // --- Trending (по оценкам)
   const trending: ComicCard[] = await db
     .select({
       id: comics.id,
@@ -108,13 +107,15 @@ export default async function HomePage() {
         )
       `,
 
-      favCount: sql<number>`(select count(*)::int from favorites f where f.comic_id = ${comics.id})`,
       ratingAvg: sql<number | null>`(select avg(r.value)::float from ratings r where r.comic_id = ${comics.id})`,
       ratingCount: sql<number>`(select count(*)::int from ratings r where r.comic_id = ${comics.id})`,
     })
     .from(comics)
     .innerJoin(authors, eq(comics.authorId, authors.id))
-    .orderBy(sql`(select count(*) from favorites f where f.comic_id = ${comics.id}) desc`, sql`${comics.createdAt} desc`)
+    .orderBy(
+      sql`(select coalesce(avg(r.value), 0) from ratings r where r.comic_id = ${comics.id}) desc`,
+      sql`${comics.createdAt} desc`
+    )
     .limit(8);
 
   // --- Новинки
@@ -136,7 +137,6 @@ export default async function HomePage() {
         )
       `,
 
-      favCount: sql<number>`(select count(*)::int from favorites f where f.comic_id = ${comics.id})`,
       ratingAvg: sql<number | null>`(select avg(r.value)::float from ratings r where r.comic_id = ${comics.id})`,
       ratingCount: sql<number>`(select count(*)::int from ratings r where r.comic_id = ${comics.id})`,
     })
@@ -379,12 +379,7 @@ export default async function HomePage() {
                   subtitle={`${c.authorName ?? "Автор неизвестен"}${c.releaseYear ? ` • ${c.releaseYear}` : ""}`}
                   coverUrl={c.coverUrl}
                   badges={
-                    <>
-                      <Badge icon="❤️" variant="highlight">
-                        {c.favCount}
-                      </Badge>
-                      <Badge icon="⭐">{fmtRating(c.ratingAvg, c.ratingCount)}</Badge>
-                    </>
+                    <Badge icon="⭐">{fmtRating(c.ratingAvg, c.ratingCount)}</Badge>
                   }
                   size="small"
                 />
@@ -409,14 +404,7 @@ export default async function HomePage() {
                   subtitle={`${c.authorName ?? "Автор неизвестен"}${c.releaseYear ? ` • ${c.releaseYear}` : ""}`}
                   coverUrl={c.coverUrl}
                   badges={
-                    <>
-                      <Badge icon="⭐">{fmtRating(c.ratingAvg, c.ratingCount)}</Badge>
-                      {c.favCount > 0 && (
-                        <Badge icon="❤️" variant="highlight">
-                          {c.favCount}
-                        </Badge>
-                      )}
-                    </>
+                    <Badge icon="⭐">{fmtRating(c.ratingAvg, c.ratingCount)}</Badge>
                   }
                   size="small"
                 />

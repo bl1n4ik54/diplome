@@ -7,7 +7,6 @@ import {
   comics,
   chapters,
   ratings,
-  favorites,
   comicGenres,
   covers,
   userComicLists,
@@ -31,7 +30,6 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   await db.transaction(async (tx) => {
     await tx.delete(readingProgress).where(eq(readingProgress.comicId, comicId));
     await tx.delete(userComicLists).where(eq(userComicLists.comicId, comicId));
-    await tx.delete(favorites).where(eq(favorites.comicId, comicId));
     await tx.delete(ratings).where(eq(ratings.comicId, comicId));
     await tx.delete(comicGenres).where(eq(comicGenres.comicId, comicId));
     await tx.delete(covers).where(eq(covers.comicId, comicId));

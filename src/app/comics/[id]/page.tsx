@@ -11,20 +11,32 @@ import {
   chapters,
   comicGenres,
   genres,
-  favorites,
   ratings,
   readingProgress,
   userComicLists,
 } from "../../../server/db/schema";
 
-import FavoriteButton from "./FavoriteButton";
 import RatingModal from "./RatingModal";
 import MangaActions from "./MangaActions";
 import GenresChips from "./GenresChips";
+import ChaptersList, { type ChapterListItem } from "./ChaptersList";
+
+export const dynamic = "force-dynamic";
+
+const CHAPTERS_PAGE_SIZE = 30;
 
 function formatRating(avg: number | null, count: number) {
   if (!avg || count <= 0) return "—";
   return `${avg.toFixed(1)} (${count})`;
+}
+
+function toIso(value: Date | string | null) {
+  if (!value) return null;
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toISOString();
 }
 
 export default async function ComicPage({ params }: { params: Promise<{ id: string }> }) {
@@ -71,21 +83,34 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
     .where(eq(comicGenres.comicId, comicId))
     .orderBy(asc(genres.name));
 
-  const chaptersRows = await db
-    .select({
-      id: chapters.id,
-      title: chapters.title,
-      chapterNumber: chapters.chapterNumber,
-      createdAt: chapters.createdAt,
-    })
-    .from(chapters)
-    .where(eq(chapters.comicId, comicId))
-    .orderBy(asc(chapters.chapterNumber));
+  const [chapterRows, chapterCountRows] = await Promise.all([
+    db
+      .select({
+        id: chapters.id,
+        title: chapters.title,
+        chapterNumber: chapters.chapterNumber,
+        createdAt: chapters.createdAt,
+      })
+      .from(chapters)
+      .where(eq(chapters.comicId, comicId))
+      .orderBy(asc(chapters.chapterNumber), asc(chapters.id))
+      .limit(CHAPTERS_PAGE_SIZE + 1),
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(chapters)
+      .where(eq(chapters.comicId, comicId)),
+  ]);
 
-  const firstChapter = chaptersRows[0] ?? null;
+  const firstChapter = chapterRows[0] ?? null;
+  const chapterCount = Number(chapterCountRows[0]?.total ?? 0);
+  const initialChapters: ChapterListItem[] = chapterRows.slice(0, CHAPTERS_PAGE_SIZE).map((ch) => ({
+    id: ch.id,
+    title: ch.title,
+    chapterNumber: ch.chapterNumber,
+    createdAt: toIso(ch.createdAt),
+  }));
+  const hasMoreChapters = chapterRows.length > CHAPTERS_PAGE_SIZE;
 
-  // favorite initial
-  let initialFav = false;
   let initialListStatus: "reading" | "planned" | "completed" | "on_hold" | "dropped" | null = null;
   let initialMyRating: number | null = null;
 
@@ -98,14 +123,6 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
     });
 
     if (me) {
-      const favRow = await db
-        .select({ ok: sql<number>`1` })
-        .from(favorites)
-        .where(sql`${favorites.userId} = ${me.id} and ${favorites.comicId} = ${comicId}`)
-        .limit(1);
-
-      initialFav = favRow.length > 0;
-
       const listRow = await db
         .select({ status: userComicLists.status })
         .from(userComicLists)
@@ -182,7 +199,7 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
 
               <div className="mw-row mw-comicStats">
                 <span className="mw-badge">★ {formatRating(c.ratingAvg, c.ratingCount ?? 0)}</span>
-                <span className="mw-badge">Глав: {chaptersRows.length}</span>
+                <span className="mw-badge">Глав: {chapterCount}</span>
                 {isAdmin ? <span className="mw-badge">admin</span> : null}
               </div>
 
@@ -267,14 +284,6 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
                   </span>
                 )}
 
-                {email ? (
-                  <FavoriteButton comicId={comicId} initial={initialFav} />
-                ) : (
-                  <Link className="mw-btn" href="/auth/login">
-                    ❤ Войти, чтобы добавлять в избранное
-                  </Link>
-                )}
-
                 <MangaActions comicId={comicId} isAuthed={Boolean(email)} initialStatus={initialListStatus} />
               </div>
             </div>
@@ -304,33 +313,7 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
             ) : null}
           </div>
 
-          <div className="mw-gridWide" style={{ marginTop: 14 }}>
-            {chaptersRows.length === 0 ? (
-              <div className="mw-muted2">Глав пока нет.</div>
-            ) : (
-              chaptersRows.map((ch) => (
-                <Link
-                  key={ch.id}
-                  href={`/comics/${comicId}/chapters/${ch.id}?page=1`}
-                  className="mw-cardLink"
-                  style={{ padding: 12 }}
-                >
-                  <div className="mw-chapterRow">
-                    <div className="mw-chapterInfo">
-                      <div className="mw-chapterName">
-                        Глава {ch.chapterNumber}
-                        {ch.title ? ` — ${ch.title}` : ""}
-                      </div>
-                      <div className="mw-muted">
-                        {ch.createdAt ? new Date(ch.createdAt).toLocaleDateString("ru-RU") : "—"}
-                      </div>
-                    </div>
-                    <span className="mw-badge">Открыть →</span>
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
+          <ChaptersList comicId={comicId} initialItems={initialChapters} initialHasMore={hasMoreChapters} />
         </section>
       </main>
     </div>

@@ -56,33 +56,33 @@ export default function ReaderClient({
     }).catch(() => null);
   }
 
-  async function go(p: number) {
+  function go(p: number) {
     const nextP = Math.max(1, Math.min(total, p));
     setCur(nextP);
-    await saveProgress(nextP);
+    void saveProgress(nextP);
     router.push(hrefForPage(nextP));
   }
 
-  async function goToChapter(nextChapterId: number) {
+  function goToChapter(nextChapterId: number) {
     if (nextChapterId === chapterId) return;
-    await saveProgress(cur);
+    void saveProgress(cur);
     router.push(`/comics/${comicId}/chapters/${nextChapterId}?page=1`);
   }
 
-  async function next() {
+  function next() {
     if (cur < total) {
-      await go(cur + 1);
+      go(cur + 1);
       return;
     }
     if (cur >= total && nextChapterHref) {
-      await saveProgress(cur);
+      void saveProgress(cur);
       router.push(nextChapterHref);
     }
   }
 
-  async function prev() {
+  function prev() {
     if (cur > 1) {
-      await go(cur - 1);
+      go(cur - 1);
       return;
     }
     if (cur <= 1 && prevChapterHref) {
@@ -109,7 +109,9 @@ export default function ReaderClient({
             <div style={{ display: "grid", gap: 8 }}>
               <div className="mw-pill">📖 Читалка</div>
               <h1 className="mw-h1">
-                {comicTitle}
+                <Link className="readerTitleLink" href={`/comics/${comicId}`}>
+                  {comicTitle}
+                </Link>
               </h1>
               <div className="mw-subtitle">
                 {authorName ? `${authorName} • ` : ""}Глава {chapterNumber}
@@ -128,12 +130,12 @@ export default function ReaderClient({
 
           {/* top bar */}
           <div className="mw-cardFlat" style={{ marginTop: 12 }}>
-            <div className="mw-row" style={{ justifyContent: "space-between" }}>
-              <div className="mw-row">
-                <button className="mw-btn" onClick={prev} disabled={!canGoPrev}>
+            <div className="mw-row readerToolbar" style={{ justifyContent: "space-between" }}>
+              <div className="mw-row readerArrowGroup">
+                <button type="button" className="mw-btn readerArrowBtn" onClick={prev} disabled={!canGoPrev}>
                   ←
                 </button>
-                <button className="mw-btn mw-btnPrimary" onClick={next} disabled={!canGoNext}>
+                <button type="button" className="mw-btn mw-btnPrimary readerArrowBtn" onClick={next} disabled={!canGoNext}>
                   →
                 </button>
               </div>
@@ -149,7 +151,7 @@ export default function ReaderClient({
               >
                 <select
                   aria-label="Выбор страницы"
-                  className="mw-btn"
+                  className="mw-btn readerSelect"
                   value={cur}
                   onChange={(e) => void go(Number(e.target.value))}
                   style={{
@@ -170,7 +172,7 @@ export default function ReaderClient({
 
                 <select
                   aria-label="Выбор главы"
-                  className="mw-btn"
+                  className="mw-btn readerSelect"
                   value={chapterId}
                   onChange={(e) => void goToChapter(Number(e.target.value))}
                   style={{

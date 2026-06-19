@@ -76,7 +76,7 @@ export default async function LoginPage() {
             </h1>
 
             <div style={{ opacity: 0.78, lineHeight: 1.55, maxWidth: 520 }}>
-              Веди списки чтения, сохраняй прогресс в читалке и собирай любимые тайтлы.
+              Веди списки чтения и сохраняй прогресс в читалке.
             </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 6 }}>

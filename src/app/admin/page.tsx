@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "../../server/db";
-import { users, comics, chapters, ratings, favorites } from "../../server/db/schema";
+import { users, comics, chapters, ratings } from "../../server/db/schema";
 import { sql } from "drizzle-orm";
 
 export default async function AdminDashboard() {
@@ -8,7 +8,6 @@ export default async function AdminDashboard() {
   const [c] = await db.select({ c: sql<number>`count(*)` }).from(comics);
   const [ch] = await db.select({ c: sql<number>`count(*)` }).from(chapters);
   const [r] = await db.select({ c: sql<number>`count(*)` }).from(ratings);
-  const [f] = await db.select({ c: sql<number>`count(*)` }).from(favorites);
 
   return (
     <>
@@ -30,10 +29,6 @@ export default async function AdminDashboard() {
           <div className="admin-kpi">
             <div className="admin-kpi-title">Оценок</div>
             <div className="admin-kpi-value">{r.c}</div>
-          </div>
-          <div className="admin-kpi">
-            <div className="admin-kpi-title">Избранного</div>
-            <div className="admin-kpi-value">{f.c}</div>
           </div>
         </div>
 
