@@ -3,6 +3,24 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  FastForward,
+  LibraryBig,
+  LockKeyhole,
+  Map as MapIcon,
+  Shuffle,
+  Sparkles,
+  Star,
+  Trophy,
+  UserRound,
+  UsersRound,
+  Wrench,
+  Zap,
+} from "lucide-react";
 
 type ContinueItem = {
   comicId: number;
@@ -77,7 +95,7 @@ function ButtonLink({
   href: string;
   children: React.ReactNode;
   variant?: "primary" | "ghost" | "outline";
-  icon?: string;
+  icon?: React.ReactNode;
 }) {
   const base: React.CSSProperties = {
     padding: "10px 18px",
@@ -117,7 +135,7 @@ function ButtonLink({
 
   return (
     <Link href={href} style={{ ...base, ...variantStyle }}>
-      {icon && <span style={{ fontSize: 16 }}>{icon}</span>}
+      {icon && <span style={{ display: "inline-flex", alignItems: "center" }}>{icon}</span>}
       {children}
     </Link>
   );
@@ -131,7 +149,7 @@ function GlassCard({
   footer,
 }: {
   title: string;
-  icon?: string;
+  icon?: React.ReactNode;
   hint?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
@@ -163,14 +181,17 @@ function GlassCard({
               fontSize: 20,
             }}
           >
-            {icon ?? "📖"}
+            {icon ?? <BookOpen size={20} strokeWidth={2.3} />}
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 16 }}>{title}</div>
             {hint && <div style={{ opacity: 0.6, fontSize: 12, marginTop: 2 }}>{hint}</div>}
           </div>
         </div>
-        <JapaneseBadge>⚡ быстрый доступ</JapaneseBadge>
+        <JapaneseBadge>
+          <Zap size={12} strokeWidth={2.4} />
+          быстрый доступ
+        </JapaneseBadge>
       </div>
       <div style={{ display: "grid", gap: 12 }}>{children}</div>
       {footer && <div style={{ marginTop: 4 }}>{footer}</div>}
@@ -178,7 +199,7 @@ function GlassCard({
   );
 }
 
-function FeatureRow({ icon, title, text }: { icon: string; title: string; text: string }) {
+function FeatureRow({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
     <div
       style={{
@@ -191,7 +212,7 @@ function FeatureRow({ icon, title, text }: { icon: string; title: string; text: 
       }}
     >
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <span style={{ fontSize: 22, filter: "drop-shadow(0 2px 4px rgba(211,47,47,0.3))" }}>{icon}</span>
+        <span style={{ display: "inline-flex", filter: "drop-shadow(0 2px 4px rgba(211,47,47,0.3))" }}>{icon}</span>
         <span style={{ fontWeight: 700 }}>{title}</span>
       </div>
       <div style={{ opacity: 0.7, fontSize: 13, lineHeight: 1.5 }}>{text}</div>
@@ -308,12 +329,14 @@ function SmallListCard({
             flexShrink: 0,
           }}
         >
-          {coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", fontSize: 24 }}>📘</div>
-          )}
+        {coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+            <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center" }}>
+              <BookOpen size={24} strokeWidth={2.2} />
+            </div>
+        )}
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -429,10 +452,10 @@ export default function HomeClient({
 
   const chips = useMemo(
     () => [
-      { label: "🏆 Популярное", onClick: () => router.push("/catalog?sort=rating") },
-      { label: "🆕 Новинки", onClick: () => router.push("/catalog?sort=new") },
-      { label: "✅ Завершённые", onClick: () => router.push("/catalog?status=completed") },
-      { label: "📅 По годам", onClick: () => router.push("/catalog?sort=year") },
+      { icon: <Trophy size={14} strokeWidth={2.3} />, label: "Популярное", onClick: () => router.push("/catalog?sort=rating") },
+      { icon: <Sparkles size={14} strokeWidth={2.3} />, label: "Новинки", onClick: () => router.push("/catalog?sort=new") },
+      { icon: <CheckCircle2 size={14} strokeWidth={2.3} />, label: "Завершённые", onClick: () => router.push("/catalog?status=completed") },
+      { icon: <CalendarDays size={14} strokeWidth={2.3} />, label: "По годам", onClick: () => router.push("/catalog?sort=year") },
     ],
     [router]
   );
@@ -469,7 +492,7 @@ export default function HomeClient({
             {/* Левый блок */}
             <div style={{ display: "grid", gap: 20 }}>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <span style={{ fontSize: 28 }}>🗾</span>
+                <MapIcon size={28} strokeWidth={2.2} />
                 <JapaneseBadge variant="red">MANGA WORLD</JapaneseBadge>
                 <JapaneseBadge>since 2025</JapaneseBadge>
               </div>
@@ -488,23 +511,23 @@ export default function HomeClient({
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 {!isAuthed ? (
                   <>
-                    <ButtonLink href="/register" variant="primary" icon="⚡">
+                    <ButtonLink href="/register" variant="primary" icon={<Zap size={16} strokeWidth={2.3} />}>
                       Начать читать
                     </ButtonLink>
-                    <ButtonLink href="/login" variant="ghost" icon="🔐">
+                    <ButtonLink href="/login" variant="ghost" icon={<LockKeyhole size={16} strokeWidth={2.3} />}>
                       Войти
                     </ButtonLink>
                   </>
                 ) : (
                   <>
-                    <ButtonLink href="/profile" variant="primary" icon="👤">
+                    <ButtonLink href="/profile" variant="primary" icon={<UserRound size={16} strokeWidth={2.3} />}>
                       Мой профиль
                     </ButtonLink>
-                    <ButtonLink href="/catalog" variant="ghost" icon="📚">
+                    <ButtonLink href="/catalog" variant="ghost" icon={<LibraryBig size={16} strokeWidth={2.3} />}>
                       Каталог
                     </ButtonLink>
                     {role === "admin" && (
-                      <ButtonLink href="/admin" variant="ghost" icon="🛠️">
+                      <ButtonLink href="/admin" variant="ghost" icon={<Wrench size={16} strokeWidth={2.3} />}>
                         Админка
                       </ButtonLink>
                     )}
@@ -525,7 +548,8 @@ export default function HomeClient({
                     gap: 8,
                   }}
                 >
-                  🎲 Случайный тайтл
+                  <Shuffle size={16} strokeWidth={2.3} />
+                  Случайный тайтл
                 </button>
               </div>
 
@@ -545,8 +569,12 @@ export default function HomeClient({
                       fontWeight: 600,
                       cursor: "pointer",
                       backdropFilter: "blur(4px)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
                     }}
                   >
+                    {c.icon}
                     {c.label}
                   </button>
                 ))}
@@ -579,7 +607,7 @@ export default function HomeClient({
 
             {/* Правый блок — быстрый старт + продолжить */}
             <div style={{ display: "grid", gap: 16 }}>
-              <GlassCard title="Быстрый старт" icon="⚡" hint="найди мангу за секунду">
+              <GlassCard title="Быстрый старт" icon={<Zap size={20} strokeWidth={2.3} />} hint="найди мангу за секунду">
                 <div style={{ display: "flex", gap: 8 }}>
                   <input
                     value={quickQ}
@@ -612,13 +640,13 @@ export default function HomeClient({
                     Искать
                   </button>
                 </div>
-                <FeatureRow icon="📖" title="Прогресс чтения" text="Мы запоминаем главу и страницу — продолжай с того места, где остановился." />
-                <FeatureRow icon="⭐" title="Оценки" text="Ставь оценки тайтлам. Рейтинги формируются автоматически." />
-                <FeatureRow icon="👥" title="Друзья" text="Следи за активностью друзей и открывай их коллекции." />
+                <FeatureRow icon={<BookOpen size={22} strokeWidth={2.3} />} title="Прогресс чтения" text="Мы запоминаем главу и страницу — продолжай с того места, где остановился." />
+                <FeatureRow icon={<Star size={22} fill="currentColor" strokeWidth={2.3} />} title="Оценки" text="Ставь оценки тайтлам. Рейтинги формируются автоматически." />
+                <FeatureRow icon={<UsersRound size={22} strokeWidth={2.3} />} title="Друзья" text="Следи за активностью друзей и открывай их коллекции." />
               </GlassCard>
 
               {isAuthed && cont3.length > 0 && (
-                <GlassCard title="Продолжить чтение" icon="⏩" hint="последние главы">
+                <GlassCard title="Продолжить чтение" icon={<FastForward size={20} strokeWidth={2.3} />} hint="последние главы">
                   {cont3.map((it) => {
                     const cur = it.page ?? 1;
                     const total = it.totalPages ?? 0;
@@ -650,8 +678,11 @@ export default function HomeClient({
                     backdropFilter: "blur(4px)",
                   }}
                 >
-                  <div style={{ fontSize: 13, opacity: 0.9 }}>
-                    📋 {stats.list} списков · 👥 {stats.friends} друзей
+                  <div style={{ fontSize: 13, opacity: 0.9, display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <ClipboardList size={14} strokeWidth={2.3} />
+                    {stats.list} списков ·
+                    <UsersRound size={14} strokeWidth={2.3} />
+                    {stats.friends} друзей
                   </div>
                   <Link href="/profile" style={{ color: "#D32F2F", fontWeight: 700, textDecoration: "none" }}>
                     Мой профиль →
@@ -713,7 +744,10 @@ export default function HomeClient({
                 title={c.title}
                 subtitle={`${c.authorName ?? "Автор"}${c.releaseYear ? ` • ${c.releaseYear}` : ""}${c.status ? ` • ${c.status}` : ""}`}
                 tags={
-                  <JapaneseBadge>★ {fmtRating(c.ratingAvg, c.ratingCount)}</JapaneseBadge>
+                  <JapaneseBadge>
+                    <Star size={12} fill="currentColor" strokeWidth={2.3} />
+                    {fmtRating(c.ratingAvg, c.ratingCount)}
+                  </JapaneseBadge>
                 }
               />
             ))}
@@ -739,7 +773,12 @@ export default function HomeClient({
                 coverUrl={c.coverUrl}
                 title={c.title}
                 meta={`${c.authorName ?? "Автор"}${c.releaseYear ? ` • ${c.releaseYear}` : ""}${c.status ? ` • ${c.status}` : ""}`}
-                right={<JapaneseBadge>★ {fmtRating(c.ratingAvg, c.ratingCount)}</JapaneseBadge>}
+                right={
+                  <JapaneseBadge>
+                    <Star size={12} fill="currentColor" strokeWidth={2.3} />
+                    {fmtRating(c.ratingAvg, c.ratingCount)}
+                  </JapaneseBadge>
+                }
               />
             ))}
           </div>
@@ -767,11 +806,11 @@ export default function HomeClient({
             </p>
           </div>
           <div style={{ display: "flex", gap: 12 }}>
-            <ButtonLink href="/catalog" variant="primary" icon="📚">
+            <ButtonLink href="/catalog" variant="primary" icon={<LibraryBig size={16} strokeWidth={2.3} />}>
               В каталог
             </ButtonLink>
             {!isAuthed && (
-              <ButtonLink href="/register" variant="outline" icon="✨">
+              <ButtonLink href="/register" variant="outline" icon={<Sparkles size={16} strokeWidth={2.3} />}>
                 Регистрация
               </ButtonLink>
             )}

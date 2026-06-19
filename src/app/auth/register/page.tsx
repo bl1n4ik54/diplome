@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { Sparkles } from "lucide-react";
 import { authOptions } from "../../api/auth/[...nextauth]/route";
 
 import RegisterForm from "./RegisterForm";
@@ -8,7 +9,7 @@ import RegisterForm from "./RegisterForm";
 const BG =
   "radial-gradient(700px 350px at 20% 0%, rgba(99,102,241,0.20), transparent 60%), radial-gradient(700px 350px at 80% 0%, rgba(236,72,153,0.16), transparent 60%), #0A0A0F";
 
-const CARD_MIN_H = 440; // ✅ тот же размер, что на login
+const CARD_MIN_H = 440; // тот же размер, что на login
 
 const cardBase: React.CSSProperties = {
   border: "1px solid rgba(255,255,255,0.10)",
@@ -68,7 +69,8 @@ export default async function RegisterPage() {
                 opacity: 0.95,
               }}
             >
-              ✨ Регистрация
+              <Sparkles size={14} strokeWidth={2.3} />
+              Регистрация
             </div>
 
             <h1 style={{ margin: 0, fontSize: "clamp(24px, 5vw, 30px)", letterSpacing: -0.6, fontWeight: 950 }}>
@@ -133,7 +135,7 @@ export default async function RegisterPage() {
               <RegisterForm />
             </div>
 
-            {/* ✅ всегда прижато вниз */}
+            {/* всегда прижато вниз */}
             <div style={{ marginTop: "auto", opacity: 0.75, fontSize: 13 }}>
               Уже есть аккаунт?{" "}
               <Link href="/login" style={{ color: "inherit", fontWeight: 900 }}>

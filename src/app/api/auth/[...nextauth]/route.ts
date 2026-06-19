@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
 
-  // ✅ под твою структуру страниц (/login, /register, /auth/error)
+  // под твою структуру страниц (/login, /register, /auth/error)
   pages: {
     signIn: "/login",
     newUser: "/register",
@@ -37,7 +37,7 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
 
-        // ✅ возвращаем минимальный user, остальное доберём в jwt() из БД
+        // возвращаем минимальный user, остальное доберём в jwt() из БД
         return {
           id: String(user.id),
           email: user.email,
@@ -80,7 +80,7 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    // ✅ кладём id/role в JWT (важно для админки)
+    // кладём id/role в JWT (важно для админки)
     async jwt({ token, user }) {
       const email = (user?.email ?? token.email) as string | undefined;
       if (!email) return token;

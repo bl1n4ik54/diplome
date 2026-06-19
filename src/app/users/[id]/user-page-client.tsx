@@ -4,6 +4,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Ban, BookOpen, Bookmark, CalendarDays, CheckCircle2, PauseCircle, UserRound } from "lucide-react";
+import "../../profile/profile.css";
 
 type Status = "reading" | "planned" | "completed" | "on_hold" | "dropped";
 const STATUS_LABEL: Record<Status, string> = {
@@ -18,6 +20,9 @@ type ListItem = {
   id: number;
   status: Status;
   progress: number;
+  progressPage: number | null;
+  progressChapterNumber: number | null;
+  progressTotalPages: number;
   comicId: number;
   title: string;
   coverUrl: string | null;
@@ -30,6 +35,38 @@ type Friendship =
   | { state: "friends"; otherUserId: number }
   | { state: "incoming"; requestId: number }
   | { state: "outgoing"; requestId: number };
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function StatusIcon({ status }: { status: Status }) {
+  const common = { size: 16, strokeWidth: 2.2 };
+
+  if (status === "reading") return <BookOpen {...common} />;
+  if (status === "planned") return <CalendarDays {...common} />;
+  if (status === "completed") return <CheckCircle2 {...common} />;
+  if (status === "on_hold") return <PauseCircle {...common} />;
+  return <Ban {...common} />;
+}
+
+function getProgressPercent(item: ListItem) {
+  if (item.progressPage && item.progressTotalPages > 0) {
+    return clamp(Math.round((item.progressPage / item.progressTotalPages) * 100), 0, 100);
+  }
+
+  return clamp(Math.round(item.progress ?? 0), 0, 100);
+}
+
+function getProgressLabel(item: ListItem) {
+  if (item.progressChapterNumber && item.progressPage) {
+    const total = item.progressTotalPages > 0 ? `/${item.progressTotalPages}` : "";
+    return `Глава ${item.progressChapterNumber} · стр. ${item.progressPage}${total}`;
+  }
+
+  if (item.progress > 0) return `Прогресс: ${item.progress}%`;
+  return "Прогресс не начат";
+}
 
 export default function UserPageClient({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(true);
@@ -112,7 +149,10 @@ export default function UserPageClient({ userId }: { userId: string }) {
         <div className="mw-container">
           <div className="mw-heroTop">
             <div style={{ display: "grid", gap: 10 }}>
-              <div className="mw-pill">👤 Пользователь</div>
+              <div className="mw-pill">
+                <UserRound size={14} strokeWidth={2.3} />
+                Пользователь
+              </div>
               <h1 className="mw-h1">
                 {loading ? "Загрузка..." : user ? user.username : "Пользователь"}
               </h1>
@@ -138,7 +178,7 @@ export default function UserPageClient({ userId }: { userId: string }) {
                   <div className="mw-muted2">Войди в аккаунт, чтобы добавлять друзей и смотреть списки.</div>
                 ) : null}
 
-                {!loading && friendship.state === "self" ? <div className="mw-muted2">Это твоя страница 🙂</div> : null}
+                {!loading && friendship.state === "self" ? <div className="mw-muted2">Это твоя страница</div> : null}
 
                 {!loading && friendship.state === "none" ? (
                   <div className="mw-row" style={{ justifyContent: "space-between" }}>
@@ -174,7 +214,10 @@ export default function UserPageClient({ userId }: { userId: string }) {
 
                 {!loading && friendship.state === "friends" ? (
                   <div className="mw-row" style={{ justifyContent: "space-between" }}>
-                    <div className="mw-muted2">Вы друзья ✅</div>
+                    <div className="mw-muted2" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <CheckCircle2 size={15} strokeWidth={2.2} />
+                      Вы друзья
+                    </div>
                     <button className="mw-btn" onClick={removeFriend}>
                       Удалить
                     </button>
@@ -217,31 +260,54 @@ export default function UserPageClient({ userId }: { userId: string }) {
           {canSeeLists ? (
             <div className="mw-gridCards" style={{ marginTop: 14 }}>
               {(Object.keys(grouped) as Status[]).map((st) => (
-                <div key={st} className="mw-cardFlat">
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
-                    <div style={{ fontWeight: 950 }}>{STATUS_LABEL[st]}</div>
+                <div key={st} className="mw-cardFlat mwStatusCol">
+                  <div className="mwStatusHead">
+                    <div className="mwStrong" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      <StatusIcon status={st} />
+                      {STATUS_LABEL[st]}
+                    </div>
                     <span className="mw-badge">{grouped[st].length}</span>
                   </div>
 
-                  <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                  <div className="mwStatusList">
                     {grouped[st].length === 0 ? (
                       <div className="mw-muted2">Пусто</div>
                     ) : (
-                      grouped[st].map((it) => (
-                        <Link key={it.id} href={`/comics/${it.comicId}`} className="mw-cardLink" style={{ padding: 10 }}>
-                          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      grouped[st].map((it) => {
+                        const progressPercent = getProgressPercent(it);
+
+                        return (
+                          <Link key={it.id} href={`/comics/${it.comicId}`} className="mwStatusItem" style={{ textDecoration: "none", color: "inherit" }}>
                             <div className="mw-cover" aria-hidden>
-                              {it.coverUrl ? <img src={it.coverUrl} alt="" /> : <span>📘</span>}
+                              {it.coverUrl ? <img src={it.coverUrl} alt="" /> : <Bookmark size={22} strokeWidth={2.2} />}
                             </div>
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <div style={{ minWidth: 0, display: "grid", gap: 5, flex: 1 }}>
+                              <div className="mwStatusLink">
                                 {it.title}
                               </div>
-                              <div className="mw-muted">progress: {it.progress}</div>
+                              <div className="mw-muted">{getProgressLabel(it)}</div>
+                              <div
+                                aria-hidden
+                                style={{
+                                  height: 4,
+                                  borderRadius: 999,
+                                  background: "rgba(255,255,255,0.10)",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: `${progressPercent}%`,
+                                    height: "100%",
+                                    borderRadius: 999,
+                                    background: "linear-gradient(90deg, #818cf8, #f472b6)",
+                                  }}
+                                />
+                              </div>
                             </div>
-                          </div>
-                        </Link>
-                      ))
+                          </Link>
+                        );
+                      })
                     )}
                   </div>
                 </div>

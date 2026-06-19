@@ -16,7 +16,7 @@ export default async function AdminUsersPage() {
     .orderBy(desc(users.createdAt))
     .limit(200);
 
-  // ✅ Date -> string
+  // Date -> string
   const initial = initialDb.map((u) => ({
     ...u,
     createdAt: u.createdAt ? u.createdAt.toISOString() : null,

@@ -27,7 +27,7 @@ export async function GET() {
     .orderBy(desc(users.createdAt))
     .limit(500);
 
-  // ✅ Date -> string
+  // Date -> string
   const items = itemsDb.map((u) => ({
     ...u,
     createdAt: u.createdAt ? u.createdAt.toISOString() : null,

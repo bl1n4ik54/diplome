@@ -31,9 +31,6 @@ export default function HeaderNav({ email, name, role }: HeaderNavProps) {
       {isOpen ? <button type="button" className={styles.backdrop} aria-label="Закрыть меню" onClick={closeMenu} /> : null}
 
       <nav className={`${styles.nav} ${isOpen ? styles.navOpen : ""}`}>
-        <Link href="/" className={styles.link} onClick={closeMenu}>
-          Главная
-        </Link>
         <Link href="/catalog" className={styles.link} onClick={closeMenu}>
           Каталог
         </Link>

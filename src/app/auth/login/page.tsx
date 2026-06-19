@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { LockKeyhole } from "lucide-react";
 import { authOptions } from "../../api/auth/[...nextauth]/route";
 
 import LoginForm from "./LoginForm";
@@ -8,7 +9,7 @@ import LoginForm from "./LoginForm";
 const BG =
   "radial-gradient(700px 350px at 20% 0%, rgba(99,102,241,0.20), transparent 60%), radial-gradient(700px 350px at 80% 0%, rgba(236,72,153,0.16), transparent 60%), #0A0A0F";
 
-const CARD_MIN_H = 440; // ✅ одинаковая высота для входа/регистрации
+const CARD_MIN_H = 440; // одинаковая высота для входа/регистрации
 
 const cardBase: React.CSSProperties = {
   border: "1px solid rgba(255,255,255,0.10)",
@@ -68,7 +69,8 @@ export default async function LoginPage() {
                 opacity: 0.95,
               }}
             >
-              🔐 Вход в аккаунт
+              <LockKeyhole size={14} strokeWidth={2.3} />
+              Вход в аккаунт
             </div>
 
             <h1 style={{ margin: 0, fontSize: "clamp(24px, 5vw, 30px)", letterSpacing: -0.6, fontWeight: 950 }}>
@@ -133,7 +135,7 @@ export default async function LoginPage() {
               <LoginForm />
             </div>
 
-            {/* ✅ всегда прижато вниз */}
+            {/* всегда прижато вниз */}
             <div style={{ marginTop: "auto", opacity: 0.75, fontSize: 13 }}>
               Нет аккаунта?{" "}
               <Link href="/register" style={{ color: "inherit", fontWeight: 900 }}>

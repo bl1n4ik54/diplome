@@ -1,6 +1,8 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { getServerSession } from "next-auth";
 import { eq, sql } from "drizzle-orm";
+import { Bookmark, FastForward, LibraryBig, Star, UsersRound } from "lucide-react";
 
 import { authOptions } from "./api/auth/[...nextauth]/route";
 import { db } from "../server/db";
@@ -39,6 +41,47 @@ type ComicCard = {
 function fmtRating(avg: number | null, count: number) {
   if (!avg || count <= 0) return "—";
   return `${avg.toFixed(1)} (${count})`;
+}
+
+function BrandMark() {
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 14,
+        display: "inline-grid",
+        placeItems: "center",
+        background: "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(236,72,153,0.24))",
+        border: "1px solid rgba(255,255,255,0.12)",
+        color: "#f9a8d4",
+      }}
+    >
+      <LibraryBig size={20} strokeWidth={2.4} />
+    </span>
+  );
+}
+
+function FeatureIcon({ children }: { children: ReactNode }) {
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: 34,
+        height: 34,
+        borderRadius: 12,
+        display: "inline-grid",
+        placeItems: "center",
+        flexShrink: 0,
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        color: "#f9a8d4",
+      }}
+    >
+      {children}
+    </span>
+  );
 }
 
 export default async function HomePage() {
@@ -170,7 +213,7 @@ export default async function HomePage() {
           {/* Шапка */}
           <div className="home-topBar">
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 32 }}>🦊</span>
+              <BrandMark />
               <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: -0.5, background: "linear-gradient(135deg, #a78bfa, #f9a8d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 MangaWorld
               </span>
@@ -265,10 +308,10 @@ export default async function HomePage() {
           {/* Быстрые фичи (карточки) */}
           <div className="home-featureGrid">
             {[
-              { icon: "📌", label: "Списки чтения", desc: "Читаю, в планах, прочитано" },
-              { icon: "⏩", label: "Прогресс", desc: "Автосохранение страницы" },
-              { icon: "🧑‍🤝‍🧑", label: "Друзья", desc: "Смотри, что читают другие" },
-              { icon: "⭐", label: "Оценки", desc: "Влияй на рейтинг" },
+              { icon: <Bookmark size={18} strokeWidth={2.3} />, label: "Списки чтения", desc: "Читаю, в планах, прочитано" },
+              { icon: <FastForward size={18} strokeWidth={2.3} />, label: "Прогресс", desc: "Автосохранение страницы" },
+              { icon: <UsersRound size={18} strokeWidth={2.3} />, label: "Друзья", desc: "Смотри, что читают другие" },
+              { icon: <Star size={18} strokeWidth={2.3} />, label: "Оценки", desc: "Влияй на рейтинг" },
             ].map((f) => (
               <div
                 key={f.label}
@@ -282,7 +325,7 @@ export default async function HomePage() {
                   border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
-                <span style={{ fontSize: 24 }}>{f.icon}</span>
+                <FeatureIcon>{f.icon}</FeatureIcon>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{f.label}</div>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{f.desc}</div>
@@ -365,7 +408,7 @@ export default async function HomePage() {
           <Section
             title="В тренде"
             action={
-              <Link href="/catalog?sort=trending" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none", fontSize: 14 }}>
+              <Link href="/catalog?sort=rating" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none", fontSize: 14 }}>
                 Все тренды →
               </Link>
             }
@@ -379,7 +422,7 @@ export default async function HomePage() {
                   subtitle={`${c.authorName ?? "Автор неизвестен"}${c.releaseYear ? ` • ${c.releaseYear}` : ""}`}
                   coverUrl={c.coverUrl}
                   badges={
-                    <Badge icon="⭐">{fmtRating(c.ratingAvg, c.ratingCount)}</Badge>
+                    <Badge icon={<Star size={14} fill="currentColor" strokeWidth={2.2} />}>{fmtRating(c.ratingAvg, c.ratingCount)}</Badge>
                   }
                   size="small"
                 />
@@ -404,7 +447,7 @@ export default async function HomePage() {
                   subtitle={`${c.authorName ?? "Автор неизвестен"}${c.releaseYear ? ` • ${c.releaseYear}` : ""}`}
                   coverUrl={c.coverUrl}
                   badges={
-                    <Badge icon="⭐">{fmtRating(c.ratingAvg, c.ratingCount)}</Badge>
+                    <Badge icon={<Star size={14} fill="currentColor" strokeWidth={2.2} />}>{fmtRating(c.ratingAvg, c.ratingCount)}</Badge>
                   }
                   size="small"
                 />

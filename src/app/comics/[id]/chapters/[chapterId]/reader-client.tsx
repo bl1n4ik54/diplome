@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BookOpen } from "lucide-react";
 
 type ChapterItem = { id: number; chapterNumber: number };
 
@@ -107,7 +108,10 @@ export default function ReaderClient({
         <div className="mw-container">
           <div className="mw-heroTop">
             <div style={{ display: "grid", gap: 8 }}>
-              <div className="mw-pill">📖 Читалка</div>
+              <div className="mw-pill">
+                <BookOpen size={14} strokeWidth={2.3} />
+                Читалка
+              </div>
               <h1 className="mw-h1">
                 <Link className="readerTitleLink" href={`/comics/${comicId}`}>
                   {comicTitle}

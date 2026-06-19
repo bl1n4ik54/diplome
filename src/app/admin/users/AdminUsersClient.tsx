@@ -43,7 +43,7 @@ export default function AdminUsersClient({ initialItems }: { initialItems: UserR
     }
 
     setItems((prev) => prev.map((u) => (u.id === userId ? { ...u, role } : u)));
-    setMsg("✅ Роль обновлена");
+    setMsg("Роль обновлена");
   }
 
   return (

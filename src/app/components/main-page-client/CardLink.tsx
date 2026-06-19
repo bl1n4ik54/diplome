@@ -73,7 +73,7 @@ export function CardLink({
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
-          <span style={{ fontSize: 24 }}>📘</span>
+          <span style={{ fontSize: 18, fontWeight: 900, opacity: 0.85 }}>M</span>
         )}
       </div>
 

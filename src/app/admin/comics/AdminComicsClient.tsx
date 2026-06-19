@@ -49,7 +49,7 @@ export default function AdminComicsClient({ initialItems }: { initialItems: Comi
     }
 
     setItems((prev) => prev.filter((x) => x.id !== id));
-    setMsg("✅ Удалено");
+    setMsg("Удалено");
   }
 
   return (
@@ -98,7 +98,7 @@ export default function AdminComicsClient({ initialItems }: { initialItems: Comi
               <td>{c.releaseYear ?? "—"}</td>
               <td>{c.rating ?? "—"}</td>
 
-              {/* ✅ ссылка на добавление главы */}
+              {/* ссылка на добавление главы */}
               <td>
                 <Link className="admin-link" href={`/admin/comics/${c.id}/add-chapter`}>
                   + Глава

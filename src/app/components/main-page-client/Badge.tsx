@@ -8,7 +8,7 @@ export function Badge({
   variant = 'default',
 }: {
   children: React.ReactNode;
-  icon?: string;
+  icon?: React.ReactNode;
   variant?: 'default' | 'highlight';
 }) {
   const baseStyle = {
@@ -39,7 +39,7 @@ export function Badge({
 
   return (
     <span style={{ ...baseStyle, ...variantStyle }}>
-      {icon && <span style={{ fontSize: '14px' }}>{icon}</span>}
+      {icon && <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '14px' }}>{icon}</span>}
       {children}
     </span>
   );

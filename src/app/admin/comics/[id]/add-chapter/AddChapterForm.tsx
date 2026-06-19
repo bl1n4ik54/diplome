@@ -49,7 +49,7 @@ export default function AddChapterForm({
       return;
     }
 
-    setMsg(`✅ Глава добавлена (ID: ${data?.chapterId}).`);
+    setMsg(`Глава добавлена (ID: ${data?.chapterId}).`);
     setTitle("");
     setPagesText("");
     setChapterNumber((n) => n + 1);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Star } from "lucide-react";
 
 const RATING_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 
@@ -95,7 +96,7 @@ export default function RatingModal({
   return (
     <>
       <button className="mw-btn mw-ratingTrigger" type="button" onClick={openModal}>
-        <span aria-hidden>★</span>
+        <Star size={16} fill="currentColor" strokeWidth={2.2} aria-hidden />
         {myRating ? `Моя оценка: ${myRating}/10` : "Оценить тайтл"}
       </button>
 
@@ -145,7 +146,7 @@ export default function RatingModal({
                   onFocus={() => setHoveredRating(value)}
                   onBlur={() => setHoveredRating(null)}
                 >
-                  ★
+                  <Star size={22} fill="currentColor" strokeWidth={2.2} aria-hidden />
                 </button>
               ))}
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Hourglass } from 'lucide-react';
 
 import { Badge } from './Badge';
 import { CardLink } from './CardLink';
@@ -166,7 +167,7 @@ export function ContinueSwiper({ items }: { items: ContinueSwiperItem[] }) {
                 title={it.comicTitle}
                 subtitle={`${it.authorName ?? 'Автор неизвестен'} • Глава ${it.chapterNumber} • стр ${currentPage}/${total}`}
                 coverUrl={it.coverUrl}
-                badges={<Badge icon="⏳">{progressPercent}%</Badge>}
+                badges={<Badge icon={<Hourglass size={14} strokeWidth={2.2} />}>{progressPercent}%</Badge>}
                 progress={progressPercent}
               />
             </div>

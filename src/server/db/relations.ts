@@ -87,7 +87,7 @@ export const chapterRelations = relations(chapters, ({ one, many }) => ({
 
   readingProgress: many(readingProgress),
 
-  // ✅ страницы главы
+  // страницы главы
   pages: many(chapterPages),
 }));
 

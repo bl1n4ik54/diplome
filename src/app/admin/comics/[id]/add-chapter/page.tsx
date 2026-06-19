@@ -11,7 +11,7 @@ export default async function AdminAddChapterPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params; // ✅ важно
+  const { id } = await params;
   const comicId = Number(id);
   if (!comicId) return notFound();
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { CircleAlert } from "lucide-react";
 import SocialButtons from "../components/SocialButtons";
 
 export default function LoginForm() {
@@ -40,8 +41,12 @@ export default function LoginForm() {
             border: "1px solid rgba(239,68,68,0.22)",
             background: "rgba(239,68,68,0.10)",
             fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}
         >
+          <CircleAlert size={16} strokeWidth={2.2} />
           {error}
         </div>
       )}

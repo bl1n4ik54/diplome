@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Ban, BookOpen, Bookmark, CalendarDays, CheckCircle2, Edit3, ListChecks, PauseCircle, Search, UserRound, UsersRound } from "lucide-react";
 import "./profile.css";
 
 type Status = "reading" | "planned" | "completed" | "on_hold" | "dropped";
@@ -14,14 +15,6 @@ const STATUS_LABEL: Record<Status, string> = {
   on_hold: "Отложено",
   dropped: "Брошено",
 };
-const STATUS_EMOJI: Record<Status, string> = {
-  reading: "📖",
-  planned: "🗓️",
-  completed: "✅",
-  on_hold: "⏸️",
-  dropped: "🚫",
-};
-
 type ListItem = {
   id: number;
   status: Status;
@@ -56,48 +49,23 @@ type ProfileUser = {
 };
 
 function Icon({ name }: { name: "user" | "edit" | "search" | "lists" | "friends" }) {
-  const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2 };
-  if (name === "user")
-    return (
-      <svg {...common}>
-        <path d="M20 21a8 8 0 0 0-16 0" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    );
-  if (name === "edit")
-    return (
-      <svg {...common}>
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
-      </svg>
-    );
-  if (name === "search")
-    return (
-      <svg {...common}>
-        <circle cx="11" cy="11" r="7" />
-        <path d="M21 21l-4.3-4.3" />
-      </svg>
-    );
-  if (name === "lists")
-    return (
-      <svg {...common}>
-        <path d="M8 6h13" />
-        <path d="M8 12h13" />
-        <path d="M8 18h13" />
-        <path d="M3 6h.01" />
-        <path d="M3 12h.01" />
-        <path d="M3 18h.01" />
-      </svg>
-    );
-  return (
-    <svg {...common}>
-      <path d="M16 11c1.66 0 3-1.57 3-3.5S17.66 4 16 4s-3 1.57-3 3.5S14.34 11 16 11Z" />
-      <path d="M8 11c1.66 0 3-1.57 3-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11Z" />
-      <path d="M2 20c0-3 3-5 6-5" />
-      <path d="M22 20c0-3-3-5-6-5" />
-      <path d="M10 20c0-3 2-5 4-5s4 2 4 5" />
-    </svg>
-  );
+  const common = { size: 18, strokeWidth: 2.2 };
+
+  if (name === "user") return <UserRound {...common} />;
+  if (name === "edit") return <Edit3 {...common} />;
+  if (name === "search") return <Search {...common} />;
+  if (name === "lists") return <ListChecks {...common} />;
+  return <UsersRound {...common} />;
+}
+
+function StatusIcon({ status }: { status: Status }) {
+  const common = { size: 16, strokeWidth: 2.2 };
+
+  if (status === "reading") return <BookOpen {...common} />;
+  if (status === "planned") return <CalendarDays {...common} />;
+  if (status === "completed") return <CheckCircle2 {...common} />;
+  if (status === "on_hold") return <PauseCircle {...common} />;
+  return <Ban {...common} />;
 }
 
 export default function ProfileClient({ user }: { user: ProfileUser }) {
@@ -174,7 +142,7 @@ export default function ProfileClient({ user }: { user: ProfileUser }) {
     }
 
     setMe((prev) => (prev ? { ...prev, username: data.user?.username ?? "" } : prev));
-    setOkMsg("✅ Профиль сохранён");
+    setOkMsg("Профиль сохранён");
     setEditOpen(false);
   }
 
@@ -323,14 +291,17 @@ export default function ProfileClient({ user }: { user: ProfileUser }) {
           {/* KPI row */}
           <div className="mwProfileKpis">
             {[
-              { t: "Читаю", v: countReading, e: "📖" },
-              { t: "В планах", v: countPlanned, e: "🗓️" },
-              { t: "Прочитано", v: countCompleted, e: "✅" },
-              { t: "Отложено", v: countHold, e: "⏸️" },
-              { t: "Брошено", v: countDropped, e: "🚫" },
+              { t: "Читаю", v: countReading, status: "reading" as Status },
+              { t: "В планах", v: countPlanned, status: "planned" as Status },
+              { t: "Прочитано", v: countCompleted, status: "completed" as Status },
+              { t: "Отложено", v: countHold, status: "on_hold" as Status },
+              { t: "Брошено", v: countDropped, status: "dropped" as Status },
             ].map((k) => (
               <div key={k.t} className="mw-cardFlat mwKpi">
-                <div className="mw-muted">{k.e} {k.t}</div>
+                <div className="mw-muted" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <StatusIcon status={k.status} />
+                  {k.t}
+                </div>
                 <div className="mwKpiVal">{loadingLists ? "…" : k.v}</div>
               </div>
             ))}
@@ -424,7 +395,7 @@ export default function ProfileClient({ user }: { user: ProfileUser }) {
                   <div className="mwProfileResultRow">
                     <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
                       <div className="mw-cover" aria-hidden>
-                        {r.coverUrl ? <img src={r.coverUrl} alt="" /> : <span>📘</span>}
+                        {r.coverUrl ? <img src={r.coverUrl} alt="" /> : <BookOpen size={22} strokeWidth={2.2} />}
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <div className="mwStrong">{r.title}</div>
@@ -466,7 +437,9 @@ export default function ProfileClient({ user }: { user: ProfileUser }) {
               <div key={st} className="mw-cardFlat mwStatusCol">
                 <div className="mwStatusHead">
                   <div className="mwStrong">
-                    <span style={{ marginRight: 8 }} aria-hidden>{STATUS_EMOJI[st]}</span>
+                    <span style={{ marginRight: 8, display: "inline-flex", verticalAlign: "text-bottom" }} aria-hidden>
+                      <StatusIcon status={st} />
+                    </span>
                     {STATUS_LABEL[st]}
                   </div>
                   <span className="mw-badge">{loadingLists ? "…" : grouped[st].length}</span>
@@ -479,7 +452,7 @@ export default function ProfileClient({ user }: { user: ProfileUser }) {
                     {grouped[st].map((it) => (
                       <div key={it.id} className="mwStatusItem">
                         <div className="mw-cover" aria-hidden>
-                          {it.coverUrl ? <img src={it.coverUrl} alt="" /> : <span>📙</span>}
+                          {it.coverUrl ? <img src={it.coverUrl} alt="" /> : <Bookmark size={22} strokeWidth={2.2} />}
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <Link href={`/comics/${it.comicId}`} className="mwStatusLink">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { CheckCircle2, CircleAlert } from "lucide-react";
 import SocialButtons from "../components/SocialButtons";
 
 export default function RegisterForm() {
@@ -37,7 +38,7 @@ export default function RegisterForm() {
       return;
     }
 
-    setOk("✅ Аккаунт создан. Выполняю вход...");
+    setOk("Аккаунт создан. Выполняю вход...");
     // авто-вход после регистрации
     await signIn("credentials", {
       email: email.trim(),
@@ -59,8 +60,12 @@ export default function RegisterForm() {
             border: "1px solid rgba(239,68,68,0.22)",
             background: "rgba(239,68,68,0.10)",
             fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}
         >
+          <CircleAlert size={16} strokeWidth={2.2} />
           {error}
         </div>
       )}
@@ -73,8 +78,12 @@ export default function RegisterForm() {
             border: "1px solid rgba(34,197,94,0.22)",
             background: "rgba(34,197,94,0.10)",
             fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}
         >
+          <CheckCircle2 size={16} strokeWidth={2.2} />
           {ok}
         </div>
       )}

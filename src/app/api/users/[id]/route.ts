@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { db } from "../../../../server/db";
@@ -10,6 +10,9 @@ type UserListItem = {
   id: number;
   status: string;
   progress: number;
+  progressPage: number | null;
+  progressChapterNumber: number | null;
+  progressTotalPages: number;
   comicId: number;
   title: string;
   coverUrl: string | null;
@@ -29,7 +32,7 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params; // ✅ FIX
+  const { id } = await params;
   const targetId = Number(id);
 
   if (!Number.isFinite(targetId)) {
@@ -99,13 +102,44 @@ export async function GET(
         id: userComicLists.id,
         status: userComicLists.status,
         progress: userComicLists.progress,
+        progressPage: sql<number | null>`
+          (select rp.page from reading_progress rp
+            where rp.user_id = ${targetId}
+              and rp.comic_id = ${userComicLists.comicId}
+            limit 1)
+        `,
+        progressChapterNumber: sql<number | null>`
+          (select ch.chapter_number from reading_progress rp
+            inner join chapters ch on ch.id = rp.chapter_id
+            where rp.user_id = ${targetId}
+              and rp.comic_id = ${userComicLists.comicId}
+            limit 1)
+        `,
+        progressTotalPages: sql<number>`
+          coalesce(
+            (select count(cp.id)::int from reading_progress rp
+              inner join chapter_pages cp on cp.chapter_id = rp.chapter_id
+              where rp.user_id = ${targetId}
+                and rp.comic_id = ${userComicLists.comicId}),
+            0
+          )
+        `,
         comicId: userComicLists.comicId,
         title: comics.title,
-        coverUrl: comics.coverUrl,
+        coverUrl: sql<string | null>`
+          coalesce(
+            (select image_url from covers c
+              where c.comic_id = ${userComicLists.comicId}
+              order by c.is_main desc, c.id asc
+              limit 1),
+            ${comics.coverUrl}
+          )
+        `,
       })
       .from(userComicLists)
       .innerJoin(comics, eq(userComicLists.comicId, comics.id))
-      .where(eq(userComicLists.userId, targetId));
+      .where(eq(userComicLists.userId, targetId))
+      .orderBy(sql`${userComicLists.updatedAt} desc`);
 
     lists = rows;
   }

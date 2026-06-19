@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { eq, sql, asc, and } from "drizzle-orm";
+import { BookOpen, FastForward, Play, Star, Wrench } from "lucide-react";
 
 import { authOptions } from "../../api/auth/[...nextauth]/route";
 import { db } from "../../../server/db";
@@ -175,7 +176,10 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
           <div className="mw-heroTop mw-comicHero">
             {/* LEFT */}
             <div className="mw-comicInfo">
-              <div className="mw-pill">📘 Тайтл</div>
+              <div className="mw-pill">
+                <BookOpen size={14} strokeWidth={2.3} />
+                Тайтл
+              </div>
 
               <h1 className="mw-h1">
                 {c.title}
@@ -198,7 +202,10 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
               )}
 
               <div className="mw-row mw-comicStats">
-                <span className="mw-badge">★ {formatRating(c.ratingAvg, c.ratingCount ?? 0)}</span>
+                <span className="mw-badge">
+                  <Star size={13} fill="currentColor" strokeWidth={2.2} />
+                  {formatRating(c.ratingAvg, c.ratingCount ?? 0)}
+                </span>
                 <span className="mw-badge">Глав: {chapterCount}</span>
                 {isAdmin ? <span className="mw-badge">admin</span> : null}
               </div>
@@ -206,11 +213,13 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
               <div className="mw-actions mw-comicActions">
                 {continueHref ? (
                   <Link className="mw-btn mw-btnPrimary" href={continueHref}>
-                    ⏩ Продолжить чтение
+                    <FastForward size={16} strokeWidth={2.3} />
+                    Продолжить чтение
                   </Link>
                 ) : firstChapter ? (
                   <Link className="mw-btn mw-btnPrimary" href={`/comics/${comicId}/chapters/${firstChapter.id}?page=1`}>
-                    ▶ Начать чтение
+                    <Play size={16} fill="currentColor" strokeWidth={2.3} />
+                    Начать чтение
                   </Link>
                 ) : (
                   <span className="mw-muted2">Пока нет глав</span>
@@ -230,7 +239,8 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
 
                 {isAdmin ? (
                   <Link className="mw-btn" href={`/admin/comics/${comicId}/add-chapter`}>
-                    🛠️ Редактировать (admin)
+                    <Wrench size={16} strokeWidth={2.3} />
+                    Редактировать (admin)
                   </Link>
                 ) : null}
               </div>
@@ -269,14 +279,15 @@ export default async function ComicPage({ params }: { params: Promise<{ id: stri
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <span style={{ fontSize: 24, opacity: 0.85 }}>📘</span>
+                  <BookOpen size={28} strokeWidth={2.2} style={{ opacity: 0.85 }} />
                 )}
               </div>
 
               <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
                 {readHref ? (
                   <Link className="mw-btn mw-btnPrimary mw-readCoverBtn" href={readHref}>
-                    {continueHref ? "⏩ Читать дальше" : "▶ Начать читать"}
+                    {continueHref ? <FastForward size={16} strokeWidth={2.3} /> : <Play size={16} fill="currentColor" strokeWidth={2.3} />}
+                    {continueHref ? "Читать дальше" : "Начать читать"}
                   </Link>
                 ) : (
                   <span className="mw-btn mw-btnDisabled mw-readCoverBtn" aria-disabled="true">

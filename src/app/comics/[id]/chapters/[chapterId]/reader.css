@@ -74,7 +74,7 @@
 }
 .readerCounterBtn:hover { background: rgba(255,255,255,0.09); }
 
-/* ✅ popover — цвет как на картинке (#0A0A0F) */
+/* popover — цвет как на картинке (#0A0A0F) */
 .readerPicker {
   position: absolute;
   left: 50%;

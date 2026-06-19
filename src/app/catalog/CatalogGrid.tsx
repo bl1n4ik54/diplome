@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Star } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type CatalogItem = {
@@ -17,6 +18,9 @@ type CatalogResponse = {
   items?: CatalogItem[];
   hasMore?: boolean;
 };
+
+type CatalogSort = "newest" | "rating" | "year";
+type CatalogSortDir = "asc" | "desc";
 
 const PAGE_SIZE = 24;
 
@@ -66,7 +70,10 @@ function CatalogCard({ item }: { item: CatalogItem }) {
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           {item.status ? <span className="mw-badge">{item.status}</span> : null}
-          <span className="mw-badge">* {typeof item.rating === "number" ? item.rating.toFixed(1) : "-"}</span>
+          <span className="mw-badge">
+            <Star size={13} fill="currentColor" strokeWidth={2.2} />
+            {typeof item.rating === "number" ? item.rating.toFixed(1) : "-"}
+          </span>
         </div>
       </div>
     </Link>
@@ -77,10 +84,18 @@ export default function CatalogGrid({
   initialItems,
   initialHasMore,
   query,
+  sort,
+  sortDir,
+  includedGenreIds,
+  excludedGenreIds,
 }: {
   initialItems: CatalogItem[];
   initialHasMore: boolean;
   query: string;
+  sort: CatalogSort;
+  sortDir: CatalogSortDir;
+  includedGenreIds: number[];
+  excludedGenreIds: number[];
 }) {
   const [items, setItems] = useState(initialItems);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -95,7 +110,7 @@ export default function CatalogGrid({
     setNextOffset(initialItems.length);
     setLoading(false);
     setError(null);
-  }, [initialHasMore, initialItems, query]);
+  }, [excludedGenreIds, includedGenreIds, initialHasMore, initialItems, query, sort, sortDir]);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -106,9 +121,13 @@ export default function CatalogGrid({
     const params = new URLSearchParams({
       offset: String(nextOffset),
       limit: String(PAGE_SIZE),
+      sort,
+      dir: sortDir,
     });
 
     if (query) params.set("q", query);
+    includedGenreIds.forEach((id) => params.append("genre", String(id)));
+    excludedGenreIds.forEach((id) => params.append("excludeGenre", String(id)));
 
     try {
       const res = await fetch(`/api/catalog?${params.toString()}`);
@@ -128,7 +147,7 @@ export default function CatalogGrid({
     } finally {
       setLoading(false);
     }
-  }, [hasMore, loading, nextOffset, query]);
+  }, [excludedGenreIds, hasMore, includedGenreIds, loading, nextOffset, query, sort, sortDir]);
 
   useEffect(() => {
     const target = sentinelRef.current;
